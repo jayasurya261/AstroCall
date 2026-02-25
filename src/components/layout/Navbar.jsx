@@ -1,5 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -20,6 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
+    const { currentUser, userRole, logout } = useAuth();
+
     return (
         <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-16 items-center justify-between px-4 mx-auto">
@@ -61,38 +65,50 @@ const Navbar = () => {
 
                 {/* Action Buttons & Profile */}
                 <div className="flex items-center gap-4">
-                    <Button variant="outline" className="hidden sm:flex">
-                        Become an Astrologer
-                    </Button>
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="relative w-8 h-8 rounded-full">
-                                <Avatar className="w-8 h-8">
-                                    <AvatarImage src="https://github.com/shadcn.png" alt="@user" />
-                                    <AvatarFallback>U</AvatarFallback>
-                                </Avatar>
+                    {!currentUser ? (
+                        <>
+                            <Button asChild variant="outline" className="hidden sm:flex">
+                                <Link to="/login">Become an Astrologer</Link>
                             </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56" align="end" forceMount>
-                            <DropdownMenuLabel className="font-normal">
-                                <div className="flex flex-col space-y-1">
-                                    <p className="text-sm font-medium leading-none">User</p>
-                                    <p className="text-xs leading-none text-muted-foreground">
-                                        user@example.com
-                                    </p>
-                                </div>
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>Profile</DropdownMenuItem>
-                            <DropdownMenuItem>Settings</DropdownMenuItem>
-                            <DropdownMenuItem>Billing</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-600">
-                                Log out
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                            <Button asChild>
+                                <Link to="/login">Log In</Link>
+                            </Button>
+                        </>
+                    ) : (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="relative w-8 h-8 rounded-full">
+                                    <Avatar className="w-8 h-8">
+                                        <AvatarFallback>{currentUser.email[0].toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56" align="end" forceMount>
+                                <DropdownMenuLabel className="font-normal">
+                                    <div className="flex flex-col space-y-1">
+                                        <p className="text-sm font-medium leading-none">
+                                            {userRole === 'astrologer' ? 'Astrologer Panel' : 'User'}
+                                        </p>
+                                        <p className="text-xs leading-none text-muted-foreground">
+                                            {currentUser.email}
+                                        </p>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {userRole === 'astrologer' && (
+                                    <DropdownMenuItem asChild>
+                                        <Link to="/astrologer-dashboard">Dashboard</Link>
+                                    </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem>Profile</DropdownMenuItem>
+                                <DropdownMenuItem>Settings</DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={logout} className="text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                                    Log out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
 
                     {/* Mobile Menu Button - Placeholder */}
                     <Button variant="ghost" size="icon" className="md:hidden">
