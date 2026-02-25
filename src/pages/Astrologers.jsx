@@ -50,18 +50,24 @@ export default function Astrologers() {
 
         setBookingId(astroId + '-' + callType);
         try {
+            // Generate a unique room name
+            const roomName = `astrocall-${astroId.substring(0, 6)}-${Date.now()}`;
+
             await addDoc(collection(db, 'sessions'), {
                 userId: currentUser.uid,
                 userEmail: currentUser.email,
                 astroId: astroId,
-                callType: callType, // 'video' or 'voice'
+                callType: callType,
+                roomName: roomName,
                 status: 'pending',
                 startedAt: serverTimestamp(),
             });
-            toast(`${callType === 'video' ? 'Video' : 'Voice'} call booked successfully!`, {
-                description: 'Redirecting to your dashboard...',
+
+            toast(`${callType === 'video' ? 'Video' : 'Voice'} call request sent!`, {
+                description: 'Waiting for the astrologer to accept...',
                 style: { background: '#e0f2fe', color: '#0369a1', border: '1px solid #7dd3fc' },
             });
+
             navigate('/user-dashboard');
         } catch (error) {
             console.error("Error booking session:", error);

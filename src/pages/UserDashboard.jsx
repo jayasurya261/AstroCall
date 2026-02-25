@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
@@ -11,6 +11,7 @@ import { Clock, PhoneCall, Calendar, Video, Phone } from 'lucide-react';
 
 export default function UserDashboard() {
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -81,6 +82,7 @@ export default function UserDashboard() {
             case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
             case 'completed': return 'bg-blue-100 text-blue-800 border-blue-200';
             case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
+            case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
             default: return 'bg-gray-100 text-gray-800 border-gray-200';
         }
     };
@@ -149,15 +151,39 @@ export default function UserDashboard() {
                                         </div>
                                     </div>
                                 </div>
+                                {/* PENDING → Waiting */}
+                                {session.status === 'pending' && (
+                                    <div className="bg-yellow-50/50 p-6 sm:border-l flex items-center justify-center">
+                                        <div className="text-center space-y-1">
+                                            <div className="flex items-center gap-2 text-yellow-700 font-medium">
+                                                <Clock className="w-4 h-4 animate-pulse" />
+                                                Waiting for acceptance
+                                            </div>
+                                            <p className="text-xs text-yellow-600">The astrologer will accept your request soon</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ACTIVE → Join Call */}
                                 {session.status === 'active' && (
                                     <div className="bg-primary/5 p-6 sm:border-l flex items-center justify-center">
-                                        <button className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-md font-medium hover:bg-primary/90 transition-colors">
+                                        <button
+                                            onClick={() => navigate(`/call-room?room=${session.roomName}&type=${session.callType}`)}
+                                            className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-md font-medium hover:bg-primary/90 transition-colors"
+                                        >
                                             {session.callType === 'video' ? (
-                                                <><Video className="w-4 h-4" /> Rejoin Video</>
+                                                <><Video className="w-4 h-4" /> Join Video</>
                                             ) : (
-                                                <><PhoneCall className="w-4 h-4" /> Rejoin Voice</>
+                                                <><PhoneCall className="w-4 h-4" /> Join Voice</>
                                             )}
                                         </button>
+                                    </div>
+                                )}
+
+                                {/* REJECTED → Label */}
+                                {session.status === 'rejected' && (
+                                    <div className="bg-red-50/50 p-6 sm:border-l flex items-center justify-center">
+                                        <p className="text-red-600 font-medium text-sm">Request Declined</p>
                                     </div>
                                 )}
                             </CardContent>

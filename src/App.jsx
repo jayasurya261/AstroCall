@@ -9,6 +9,7 @@ import Astrologers from "@/pages/Astrologers";
 import UserDashboard from "@/pages/UserDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AstrologerDashboard from "@/pages/AstrologerDashboard";
+import CallRoom from "@/pages/CallRoom";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
               <Route path="/user-dashboard" element={<UserDashboard />} />
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
               <Route path="/astrologer-dashboard" element={<AstrologerDashboard />} />
+              <Route path="/call-room" element={<CallRoom />} />
             </Routes>
           </main>
           <Footer />

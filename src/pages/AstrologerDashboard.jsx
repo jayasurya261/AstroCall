@@ -1,77 +1,131 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Clock, PhoneCall, Calendar, Video, Phone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Clock, PhoneCall, Calendar, Video, Phone, Check, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AstrologerDashboard() {
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(null); // tracks which session is being acted on
+
+    async function fetchSessions() {
+        if (!currentUser) return;
+        try {
+            const q = query(
+                collection(db, 'sessions'),
+                where('astroId', '==', currentUser.uid)
+            );
+
+            const querySnapshot = await getDocs(q);
+
+            const sessionsWithUserData = await Promise.all(
+                querySnapshot.docs.map(async (sessionDoc) => {
+                    const sessionData = sessionDoc.data();
+
+                    let userEmail = 'Unknown User';
+                    if (sessionData.userId) {
+                        try {
+                            const userRef = doc(db, 'users', sessionData.userId);
+                            const userSnap = await getDoc(userRef);
+                            if (userSnap.exists()) {
+                                userEmail = userSnap.data().email;
+                            }
+                        } catch (e) {
+                            console.error("Error fetching user data:", e);
+                        }
+                    }
+
+                    return {
+                        id: sessionDoc.id,
+                        userEmail: userEmail,
+                        ...sessionData
+                    };
+                })
+            );
+
+            sessionsWithUserData.sort((a, b) => {
+                // Pending first, then active, then rest
+                const priority = { pending: 0, active: 1, completed: 2, rejected: 3, cancelled: 4 };
+                const pA = priority[a.status] ?? 5;
+                const pB = priority[b.status] ?? 5;
+                if (pA !== pB) return pA - pB;
+                const aTime = a.startedAt?.toDate?.() || new Date(0);
+                const bTime = b.startedAt?.toDate?.() || new Date(0);
+                return bTime - aTime;
+            });
+
+            setSessions(sessionsWithUserData);
+        } catch (error) {
+            console.error("Error fetching sessions:", error);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     useEffect(() => {
-        if (!currentUser) return;
-
-        async function fetchSessions() {
-            try {
-                const q = query(
-                    collection(db, 'sessions'),
-                    where('astroId', '==', currentUser.uid)
-                );
-
-                const querySnapshot = await getDocs(q);
-
-                const sessionsWithUserData = await Promise.all(
-                    querySnapshot.docs.map(async (sessionDoc) => {
-                        const sessionData = sessionDoc.data();
-
-                        let userEmail = 'Unknown User';
-                        if (sessionData.userId) {
-                            try {
-                                const userRef = doc(db, 'users', sessionData.userId);
-                                const userSnap = await getDoc(userRef);
-                                if (userSnap.exists()) {
-                                    userEmail = userSnap.data().email;
-                                }
-                            } catch (e) {
-                                console.error("Error fetching user data:", e);
-                            }
-                        }
-
-                        return {
-                            id: sessionDoc.id,
-                            userEmail: userEmail,
-                            ...sessionData
-                        };
-                    })
-                );
-
-                // Sort client-side: newest first
-                sessionsWithUserData.sort((a, b) => {
-                    const aTime = a.startedAt?.toDate?.() || new Date(0);
-                    const bTime = b.startedAt?.toDate?.() || new Date(0);
-                    return bTime - aTime;
-                });
-
-                setSessions(sessionsWithUserData);
-            } catch (error) {
-                console.error("Error fetching sessions:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
-
         fetchSessions();
     }, [currentUser]);
+
+    // Accept a session
+    async function handleAccept(sessionId) {
+        setActionLoading(sessionId + '-accept');
+        try {
+            await updateDoc(doc(db, 'sessions', sessionId), { status: 'active' });
+
+            // Find the session to get its room info
+            const session = sessions.find(s => s.id === sessionId);
+
+            toast('Session accepted! Joining call...', {
+                style: { background: '#dcfce7', color: '#166534', border: '1px solid #86efac' },
+            });
+
+            // Navigate directly to the call room
+            if (session?.roomName) {
+                navigate(`/call-room?room=${session.roomName}&type=${session.callType}`);
+            } else {
+                await fetchSessions();
+            }
+        } catch (err) {
+            console.error("Error accepting session:", err);
+            toast('Failed to accept session', {
+                style: { background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' },
+            });
+        } finally {
+            setActionLoading(null);
+        }
+    }
+
+    // Reject a session
+    async function handleReject(sessionId) {
+        setActionLoading(sessionId + '-reject');
+        try {
+            await updateDoc(doc(db, 'sessions', sessionId), { status: 'rejected' });
+            toast('Session rejected.', {
+                style: { background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' },
+            });
+            await fetchSessions();
+        } catch (err) {
+            console.error("Error rejecting session:", err);
+        } finally {
+            setActionLoading(null);
+        }
+    }
 
     const getStatusColor = (status) => {
         switch (status) {
             case 'active': return 'bg-green-100 text-green-800 border-green-200';
             case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
             case 'completed': return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
             case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
             default: return 'bg-gray-100 text-gray-800 border-gray-200';
         }
@@ -120,7 +174,7 @@ export default function AstrologerDashboard() {
             ) : (
                 <div className="grid gap-4">
                     {sessions.map(session => (
-                        <Card key={session.id} className="overflow-hidden">
+                        <Card key={session.id} className={`overflow-hidden ${session.status === 'pending' ? 'border-yellow-300 shadow-sm shadow-yellow-100' : ''}`}>
                             <CardContent className="p-0 sm:flex items-center">
                                 <div className="p-6 flex-1">
                                     <div className="flex items-center justify-between mb-4 sm:mb-2 flex-wrap gap-2">
@@ -128,7 +182,6 @@ export default function AstrologerDashboard() {
                                             <Badge variant="outline" className={getStatusColor(session.status)}>
                                                 {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
                                             </Badge>
-                                            {/* Call type badge */}
                                             <Badge variant="secondary" className="flex items-center gap-1 text-xs">
                                                 {session.callType === 'video' ? (
                                                     <><Video className="w-3 h-3" /> Video Call</>
@@ -139,7 +192,7 @@ export default function AstrologerDashboard() {
                                         </div>
                                         <span className="text-sm text-muted-foreground flex items-center gap-1">
                                             <Clock className="w-4 h-4" />
-                                            {session.startedAt ? new Date(session.startedAt.toDate()).toLocaleDateString() : 'Pending Date'}
+                                            {session.startedAt ? new Date(session.startedAt.toDate()).toLocaleDateString() : 'Pending'}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-4 mt-4">
@@ -152,15 +205,43 @@ export default function AstrologerDashboard() {
                                         </div>
                                     </div>
                                 </div>
-                                {(session.status === 'active' || session.status === 'pending') && (
+
+                                {/* PENDING → Show Accept / Reject */}
+                                {session.status === 'pending' && (
+                                    <div className="bg-yellow-50/50 p-6 sm:border-l flex flex-col items-center justify-center gap-3">
+                                        <Button
+                                            onClick={() => handleAccept(session.id)}
+                                            disabled={!!actionLoading}
+                                            className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
+                                        >
+                                            <Check className="w-4 h-4" />
+                                            {actionLoading === session.id + '-accept' ? 'Accepting...' : 'Accept'}
+                                        </Button>
+                                        <Button
+                                            onClick={() => handleReject(session.id)}
+                                            disabled={!!actionLoading}
+                                            variant="outline"
+                                            className="w-full gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                        >
+                                            <X className="w-4 h-4" />
+                                            {actionLoading === session.id + '-reject' ? 'Rejecting...' : 'Reject'}
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {/* ACTIVE → Show Join Call */}
+                                {session.status === 'active' && (
                                     <div className="bg-primary/5 p-6 sm:border-l flex items-center justify-center">
-                                        <button className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-md font-medium hover:bg-primary/90 transition-colors">
+                                        <Button
+                                            onClick={() => navigate(`/call-room?room=${session.roomName}&type=${session.callType}`)}
+                                            className="gap-2"
+                                        >
                                             {session.callType === 'video' ? (
                                                 <><Video className="w-4 h-4" /> Join Video Call</>
                                             ) : (
                                                 <><PhoneCall className="w-4 h-4" /> Join Voice Call</>
                                             )}
-                                        </button>
+                                        </Button>
                                     </div>
                                 )}
                             </CardContent>
