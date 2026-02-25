@@ -95,9 +95,19 @@ const Navbar = () => {
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
+                                {userRole === 'superadmin' && (
+                                    <DropdownMenuItem asChild>
+                                        <Link to="/admin-dashboard">Admin Panel</Link>
+                                    </DropdownMenuItem>
+                                )}
                                 {userRole === 'astrologer' && (
                                     <DropdownMenuItem asChild>
                                         <Link to="/astrologer-dashboard">Dashboard</Link>
+                                    </DropdownMenuItem>
+                                )}
+                                {userRole === 'user' && (
+                                    <DropdownMenuItem asChild>
+                                        <Link to="/user-dashboard">My Sessions</Link>
                                     </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem>Profile</DropdownMenuItem>

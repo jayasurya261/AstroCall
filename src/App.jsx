@@ -4,6 +4,9 @@ import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Login from "@/pages/Login";
 import Home from "@/pages/Home";
+import Astrologers from "@/pages/Astrologers";
+import UserDashboard from "@/pages/UserDashboard";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 function App() {
   return (
@@ -15,7 +18,9 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
-              {/* Add more routes here later */}
+              <Route path="/astrologers" element={<Astrologers />} />
+              <Route path="/user-dashboard" element={<UserDashboard />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
             </Routes>
           </main>
           <Footer />
