@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
     NavigationMenu,
@@ -23,6 +23,12 @@ import {
 
 const Navbar = () => {
     const { currentUser, userRole, logout } = useAuth();
+    const navigate = useNavigate();
+
+    async function handleLogout() {
+        await logout();
+        navigate('/');
+    }
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -35,33 +41,30 @@ const Navbar = () => {
                     <span className="text-xl font-bold tracking-tight">AstroCall</span>
                 </div>
 
-                {/* Desktop Navigation */}
-                <div className="hidden md:flex flex-1 items-center justify-center">
-                    <NavigationMenu>
-                        <NavigationMenuList>
-                            <NavigationMenuItem>
-                                <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/">
-                                    Home
-                                </NavigationMenuLink>
-                            </NavigationMenuItem>
-                            <NavigationMenuItem>
-                                <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/astrologers">
-                                    Astrologers
-                                </NavigationMenuLink>
-                            </NavigationMenuItem>
-                            <NavigationMenuItem>
-                                <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/call-logs">
-                                    Call Logs
-                                </NavigationMenuLink>
-                            </NavigationMenuItem>
-                            <NavigationMenuItem>
-                                <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/about">
-                                    About
-                                </NavigationMenuLink>
-                            </NavigationMenuItem>
-                        </NavigationMenuList>
-                    </NavigationMenu>
-                </div>
+                {/* Desktop Navigation — only show when logged in */}
+                {currentUser && (
+                    <div className="hidden md:flex flex-1 items-center justify-center">
+                        <NavigationMenu>
+                            <NavigationMenuList>
+                                <NavigationMenuItem>
+                                    <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/">
+                                        Home
+                                    </NavigationMenuLink>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem>
+                                    <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/astrologers">
+                                        Astrologers
+                                    </NavigationMenuLink>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem>
+                                    <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/about">
+                                        About
+                                    </NavigationMenuLink>
+                                </NavigationMenuItem>
+                            </NavigationMenuList>
+                        </NavigationMenu>
+                    </div>
+                )}
 
                 {/* Action Buttons & Profile */}
                 <div className="flex items-center gap-4">
@@ -87,7 +90,7 @@ const Navbar = () => {
                                 <DropdownMenuLabel className="font-normal">
                                     <div className="flex flex-col space-y-1">
                                         <p className="text-sm font-medium leading-none">
-                                            {userRole === 'astrologer' ? 'Astrologer Panel' : 'User'}
+                                            {userRole === 'superadmin' ? 'Super Admin' : userRole === 'astrologer' ? 'Astrologer' : 'User'}
                                         </p>
                                         <p className="text-xs leading-none text-muted-foreground">
                                             {currentUser.email}
@@ -113,7 +116,7 @@ const Navbar = () => {
                                 <DropdownMenuItem>Profile</DropdownMenuItem>
                                 <DropdownMenuItem>Settings</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={logout} className="text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                                <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
                                     Log out
                                 </DropdownMenuItem>
                             </DropdownMenuContent>

@@ -1,70 +1,37 @@
 import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Video, Phone, Star, CheckCircle2 } from 'lucide-react';
+import { Video, Phone, Star, CheckCircle2, Users, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Astrologers() {
+    const { currentUser } = useAuth();
+    const navigate = useNavigate();
     const [astrologers, setAstrologers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [bookingId, setBookingId] = useState(null); // tracks which astrologer is being booked
 
     useEffect(() => {
         async function fetchAstrologers() {
             try {
-                // Determine online status if specified, else fetch all approved
-                // For now, assuming anyone with role="astrologer" in 'users' or 'astrologers' collection is listed.
-                // Assuming we use the 'astrologers' collection as planned.
-                const q = query(
-                    collection(db, 'astrologers'),
-                    where('isOnline', '==', true)
-                );
-
-                const querySnapshot = await getDocs(q);
+                const querySnapshot = await getDocs(collection(db, 'astrologers'));
                 const fetchedAstros = querySnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
 
-                // Fallback mock data for visual testing if DB is empty
-                if (fetchedAstros.length === 0) {
-                    setAstrologers([
-                        {
-                            id: 'mock1',
-                            name: 'Aacharya Sharma',
-                            bio: 'Expert in Vedic Astrology, Vastu, and Numerology with 15+ years of experience guiding souls.',
-                            languages: ['English', 'Hindi', 'Sanskrit'],
-                            isOnline: true,
-                            rating: 4.9,
-                            reviews: 1204,
-                            hourlyRate: 50
-                        },
-                        {
-                            id: 'mock2',
-                            name: 'Tarot Reader Priya',
-                            bio: 'Intuitive Tarot reader and energy healer focusing on relationships, career paths, and spiritual growth.',
-                            languages: ['English', 'Spanish'],
-                            isOnline: true,
-                            rating: 4.8,
-                            reviews: 856,
-                            hourlyRate: 40
-                        },
-                        {
-                            id: 'mock3',
-                            name: 'Pandit Verma',
-                            bio: 'Renowned expert in Kundli matching, face reading, and remedial astrology. Accurate predictions guaranteed.',
-                            languages: ['Hindi', 'Punjabi'],
-                            isOnline: true,
-                            rating: 5.0,
-                            reviews: 3200,
-                            hourlyRate: 60
-                        }
-                    ]);
-                } else {
-                    setAstrologers(fetchedAstros);
-                }
+                fetchedAstros.sort((a, b) => {
+                    if (a.isOnline === b.isOnline) return (a.name || '').localeCompare(b.name || '');
+                    return a.isOnline ? -1 : 1;
+                });
+
+                setAstrologers(fetchedAstros);
             } catch (error) {
                 console.error("Error fetching astrologers:", error);
             } finally {
@@ -75,14 +42,46 @@ export default function Astrologers() {
         fetchAstrologers();
     }, []);
 
+    async function handleBook(astroId, callType) {
+        if (!currentUser) {
+            navigate('/login');
+            return;
+        }
+
+        setBookingId(astroId + '-' + callType);
+        try {
+            await addDoc(collection(db, 'sessions'), {
+                userId: currentUser.uid,
+                userEmail: currentUser.email,
+                astroId: astroId,
+                callType: callType, // 'video' or 'voice'
+                status: 'pending',
+                startedAt: serverTimestamp(),
+            });
+            toast(`${callType === 'video' ? 'Video' : 'Voice'} call booked successfully!`, {
+                description: 'Redirecting to your dashboard...',
+                style: { background: '#e0f2fe', color: '#0369a1', border: '1px solid #7dd3fc' },
+            });
+            navigate('/user-dashboard');
+        } catch (error) {
+            console.error("Error booking session:", error);
+            toast('Failed to book session', {
+                description: 'Please try again later.',
+                style: { background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' },
+            });
+        } finally {
+            setBookingId(null);
+        }
+    }
+
     return (
         <div className="container py-10 mx-auto px-4 md:px-8">
             <div className="mb-10 text-center">
                 <h1 className="text-4xl font-extrabold tracking-tight text-foreground md:text-5xl mb-4">
-                    Our <span className="text-primary">Online</span> Astrologers
+                    Our <span className="text-primary">Astrologers</span>
                 </h1>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    Connect instantly with verified experts. Choose your preferred astrologer and start a live consultation right now.
+                    Connect instantly with verified experts. Choose your preferred astrologer and start a live consultation.
                 </p>
             </div>
 
@@ -92,23 +91,32 @@ export default function Astrologers() {
                         <Card key={i} className="animate-pulse h-96 bg-muted/30"></Card>
                     ))}
                 </div>
+            ) : astrologers.length === 0 ? (
+                <div className="text-center py-20 bg-muted/30 rounded-lg border border-dashed">
+                    <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium text-foreground">No astrologers available yet</h3>
+                    <p className="text-muted-foreground mt-1 max-w-md mx-auto">
+                        Astrologers will appear here once they register and are verified on the platform.
+                    </p>
+                    <Button asChild variant="outline" className="mt-6">
+                        <Link to="/login">Become an Astrologer</Link>
+                    </Button>
+                </div>
             ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {astrologers.map(astro => (
-                        <Card key={astro.id} className="overflow-hidden flex flex-col hover:border-primary/50 transition-colors">
+                        <Card key={astro.id} className={`overflow-hidden flex flex-col transition-colors ${astro.isOnline ? 'hover:border-primary/50' : 'opacity-75'}`}>
                             <CardHeader className="p-6 pb-0 flex flex-row items-start gap-4 space-y-0">
                                 <div className="relative">
                                     <Avatar className="w-20 h-20 border-2 border-primary/20">
                                         <AvatarImage src={`https://i.pravatar.cc/150?u=${astro.id}`} />
-                                        <AvatarFallback>{astro.name.substring(0, 2)}</AvatarFallback>
+                                        <AvatarFallback>{(astro.name || 'AS').substring(0, 2).toUpperCase()}</AvatarFallback>
                                     </Avatar>
-                                    {astro.isOnline && (
-                                        <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-background"></span>
-                                    )}
+                                    <span className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-background ${astro.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
                                 </div>
                                 <div className="flex flex-col flex-1 pl-2">
                                     <div className="flex items-center gap-1.5 mb-1">
-                                        <h3 className="font-bold text-lg leading-none">{astro.name}</h3>
+                                        <h3 className="font-bold text-lg leading-none">{astro.name || 'Astrologer'}</h3>
                                         <CheckCircle2 className="w-4 h-4 text-primary fill-primary/20" />
                                     </div>
                                     <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 mb-2">
@@ -118,9 +126,14 @@ export default function Astrologers() {
                                             ({astro.reviews || 0} reviews)
                                         </span>
                                     </div>
-                                    <p className="text-sm font-semibold text-primary">
-                                        ${astro.hourlyRate || 30}/hr
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm font-semibold text-primary">
+                                            ${astro.hourlyRate || 30}/hr
+                                        </p>
+                                        <Badge variant={astro.isOnline ? "default" : "secondary"} className="text-xs">
+                                            {astro.isOnline ? "Online" : "Offline"}
+                                        </Badge>
+                                    </div>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-6 flex-1">
@@ -136,12 +149,29 @@ export default function Astrologers() {
                                 </div>
                             </CardContent>
                             <CardFooter className="p-6 pt-0 gap-3">
-                                <Button className="flex-1 gap-2 shadow-md shadow-primary/20">
-                                    <Video className="w-4 h-4" />
+                                <Button
+                                    className="flex-1 gap-2 shadow-md shadow-primary/20"
+                                    disabled={!!bookingId}
+                                    onClick={() => handleBook(astro.id, 'video')}
+                                >
+                                    {bookingId === astro.id + '-video' ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Video className="w-4 h-4" />
+                                    )}
                                     Video Call
                                 </Button>
-                                <Button variant="outline" className="flex-1 gap-2 bg-muted/10">
-                                    <Phone className="w-4 h-4" />
+                                <Button
+                                    variant="outline"
+                                    className="flex-1 gap-2 bg-muted/10"
+                                    disabled={!!bookingId}
+                                    onClick={() => handleBook(astro.id, 'voice')}
+                                >
+                                    {bookingId === astro.id + '-voice' ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Phone className="w-4 h-4" />
+                                    )}
                                     Voice Call
                                 </Button>
                             </CardFooter>

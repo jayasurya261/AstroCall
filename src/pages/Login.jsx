@@ -6,16 +6,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
+function getRedirectPath(role) {
+    if (role === "astrologer") return "/astrologer-dashboard";
+    if (role === "superadmin") return "/admin-dashboard";
+    return "/user-dashboard";
+}
+
 export default function Login() {
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [role, setRole] = useState("user"); // Default role for signup
+    const [role, setRole] = useState("user");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
-    const { login, signup, loginWithGoogle } = useAuth();
 
+    // Google Auth — two-step state
+    const [needsGoogleRole, setNeedsGoogleRole] = useState(false);
+    const [pendingGoogleUser, setPendingGoogleUser] = useState(null);
+
+    const navigate = useNavigate();
+    const { login, signup, loginWithGoogle, completeGoogleLoginWithRole } = useAuth();
+
+    // ─── Email/Password Submit ───────────────────────────────────────
     async function handleSubmit(e) {
         e.preventDefault();
         setError("");
@@ -23,11 +35,11 @@ export default function Login() {
 
         try {
             if (isLogin) {
-                await login(email, password);
-                navigate("/");
+                const { role: storedRole } = await login(email, password);
+                navigate(getRedirectPath(storedRole));
             } else {
                 await signup(email, password, role);
-                navigate(role === "astrologer" ? "/astrologer-dashboard" : "/");
+                navigate(getRedirectPath(role));
             }
         } catch (err) {
             setError(err.message || "Failed to authenticate");
@@ -36,19 +48,87 @@ export default function Login() {
         setLoading(false);
     }
 
+    // ─── Google Sign-In ──────────────────────────────────────────────
     async function handleGoogleLogin() {
         setError("");
         setLoading(true);
         try {
-            await loginWithGoogle(role);
-            // Since role could be newly assigned here if signing up, check its state
-            navigate(role === "astrologer" ? "/astrologer-dashboard" : "/");
+            const result = await loginWithGoogle();
+
+            if (result.requiresRole) {
+                // New user — show role picker
+                setPendingGoogleUser(result.user);
+                setNeedsGoogleRole(true);
+            } else {
+                // Existing user — redirect based on stored role
+                navigate(getRedirectPath(result.role));
+            }
         } catch (err) {
             setError(err.message || "Failed to authenticate with Google");
         }
         setLoading(false);
     }
 
+    // ─── Complete Google Sign-In (after role is chosen) ──────────────
+    async function handleCompleteGoogle() {
+        if (!pendingGoogleUser) return;
+        setLoading(true);
+        setError("");
+        try {
+            await completeGoogleLoginWithRole(pendingGoogleUser, role);
+            navigate(getRedirectPath(role));
+        } catch (err) {
+            setError(err.message || "Failed to complete Google Sign In");
+        }
+        setLoading(false);
+    }
+
+    // ─── RENDER: Role Selection (Google new user) ────────────────────
+    if (needsGoogleRole) {
+        return (
+            <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
+                <Card className="w-full max-w-md">
+                    <CardHeader>
+                        <CardTitle className="text-2xl text-center">Choose Your Role</CardTitle>
+                        <CardDescription className="text-center">
+                            Welcome! How would you like to use AstroCall?
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {error && <div className="p-3 mb-4 text-sm text-red-500 bg-red-100/50 rounded-md border border-red-200">{error}</div>}
+                        <div className="space-y-4">
+                            <Label>I want to join as:</Label>
+                            <div className="grid grid-cols-2 gap-4">
+                                <Button
+                                    type="button"
+                                    variant={role === "user" ? "default" : "outline"}
+                                    onClick={() => setRole("user")}
+                                    className="h-20 flex-col gap-1"
+                                >
+                                    <span className="text-lg">👤</span>
+                                    <span>User</span>
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={role === "astrologer" ? "default" : "outline"}
+                                    onClick={() => setRole("astrologer")}
+                                    className="h-20 flex-col gap-1"
+                                >
+                                    <span className="text-lg">⭐</span>
+                                    <span>Astrologer</span>
+                                </Button>
+                            </div>
+                            <Button disabled={loading} className="w-full mt-4" onClick={handleCompleteGoogle}>
+                                {loading ? "Setting up..." : "Complete Sign In"}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    // ─── RENDER: Main Login / Signup Form ────────────────────────────
     return (
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
             <Card className="w-full max-w-md">
@@ -92,7 +172,7 @@ export default function Login() {
 
                         {!isLogin && (
                             <div className="space-y-2">
-                                <Label>I want to join as a:</Label>
+                                <Label>I want to join as:</Label>
                                 <div className="grid grid-cols-2 gap-4">
                                     <Button
                                         type="button"
@@ -113,7 +193,7 @@ export default function Login() {
                         )}
 
                         <Button disabled={loading} className="w-full" type="submit">
-                            {isLogin ? "Log In" : "Sign Up"}
+                            {loading ? "Please wait..." : isLogin ? "Log In" : "Sign Up"}
                         </Button>
                     </form>
 
@@ -154,7 +234,7 @@ export default function Login() {
                     <Button
                         variant="link"
                         className="text-sm text-muted-foreground"
-                        onClick={() => setIsLogin(!isLogin)}
+                        onClick={() => { setIsLogin(!isLogin); setError(""); }}
                     >
                         {isLogin
                             ? "Don't have an account? Sign up"
