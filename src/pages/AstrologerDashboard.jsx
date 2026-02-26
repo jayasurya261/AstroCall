@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Clock, PhoneCall, Calendar, Video, Phone, Check, X, Power, DollarSign, Camera, Star, MessageSquare, MessageCircle } from 'lucide-react';
+import { Clock, PhoneCall, Calendar, Video, Phone, Check, X, Power, DollarSign, Camera, Star, MessageSquare, MessageCircle, Globe, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
@@ -30,6 +30,10 @@ export default function AstrologerDashboard() {
     const [myReviews, setMyReviews] = useState([]);
     const [reviewsLoading, setReviewsLoading] = useState(true);
     const [myChats, setMyChats] = useState([]);
+    const [astroLanguages, setAstroLanguages] = useState([]);
+    const [savingLangs, setSavingLangs] = useState(false);
+    const [astroSpecializations, setAstroSpecializations] = useState([]);
+    const [savingSpecs, setSavingSpecs] = useState(false);
 
     // Fetch online status from astrologers collection
     async function fetchOnlineStatus() {
@@ -43,6 +47,8 @@ export default function AstrologerDashboard() {
                 setHourlyRate(rate);
                 setRateInput(String(rate));
                 setPhotoURL(astroSnap.data().photoURL || '');
+                setAstroLanguages(astroSnap.data().languages || []);
+                setAstroSpecializations(astroSnap.data().specializations || []);
             }
         } catch (err) {
             console.error("Error fetching online status:", err);
@@ -386,6 +392,86 @@ export default function AstrologerDashboard() {
                         {togglingStatus ? '...' : isOnline ? t('astrologers.online') : t('astrologers.offline')}
                     </Button>
                     <span className={`w-3 h-3 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></span>
+                </div>
+            </div>
+
+            {/* Language Selector */}
+            <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                    <Globe className="w-5 h-5 text-primary" />
+                    <h3 className="text-sm font-semibold text-foreground">Languages You Speak</h3>
+                    {savingLangs && <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Bengali', 'Marathi', 'Gujarati', 'Punjabi', 'Urdu', 'Odia'].map(lang => {
+                        const isSelected = astroLanguages.includes(lang);
+                        return (
+                            <button
+                                key={lang}
+                                onClick={async () => {
+                                    const updated = isSelected
+                                        ? astroLanguages.filter(l => l !== lang)
+                                        : [...astroLanguages, lang];
+                                    setAstroLanguages(updated);
+                                    setSavingLangs(true);
+                                    try {
+                                        await updateDoc(doc(db, 'astrologers', currentUser.uid), { languages: updated });
+                                    } catch (err) {
+                                        console.error('Error saving languages:', err);
+                                    } finally {
+                                        setSavingLangs(false);
+                                    }
+                                }}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${isSelected
+                                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                                    : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
+                                    }`}
+                            >
+                                {isSelected && <Check className="w-3 h-3 inline mr-1" />}
+                                {lang}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Specializations Selector */}
+            <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    <h3 className="text-sm font-semibold text-foreground">Your Specializations</h3>
+                    {savingSpecs && <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {['Vedic Astrology', 'Tarot Reading', 'Numerology', 'Palmistry', 'Vastu', 'Face Reading', 'KP Astrology', 'Nadi Astrology', 'Prashna Kundli'].map(spec => {
+                        const isSelected = astroSpecializations.includes(spec);
+                        return (
+                            <button
+                                key={spec}
+                                onClick={async () => {
+                                    const updated = isSelected
+                                        ? astroSpecializations.filter(s => s !== spec)
+                                        : [...astroSpecializations, spec];
+                                    setAstroSpecializations(updated);
+                                    setSavingSpecs(true);
+                                    try {
+                                        await updateDoc(doc(db, 'astrologers', currentUser.uid), { specializations: updated });
+                                    } catch (err) {
+                                        console.error('Error saving specializations:', err);
+                                    } finally {
+                                        setSavingSpecs(false);
+                                    }
+                                }}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${isSelected
+                                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                                    : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
+                                    }`}
+                            >
+                                {isSelected && <Check className="w-3 h-3 inline mr-1" />}
+                                {spec}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 

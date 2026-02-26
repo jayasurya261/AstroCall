@@ -240,6 +240,14 @@ export default function Astrologers() {
                                     {astro.bio || 'Professional Astrologer dedicated to helping you find your path.'}
                                 </p>
                                 <div className="flex flex-wrap gap-2">
+                                    {astro.specializations?.slice(0, 3).map(spec => (
+                                        <Badge key={spec} className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 text-xs py-0">
+                                            {spec}
+                                        </Badge>
+                                    ))}
+                                    {astro.specializations?.length > 3 && (
+                                        <Badge variant="outline" className="text-xs py-0 text-muted-foreground">+{astro.specializations.length - 3}</Badge>
+                                    )}
                                     {astro.languages?.map(lang => (
                                         <Badge key={lang} variant="secondary" className="bg-muted/50 text-xs py-0">
                                             {lang}

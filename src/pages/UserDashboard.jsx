@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Clock, PhoneCall, Calendar, Video, Phone, Star, MessageSquare, Loader2, CheckCircle2, MessageCircle, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import BirthChart from '@/components/astrology/BirthChart';
+import DailyHoroscope from '@/components/astrology/DailyHoroscope';
 
 export default function UserDashboard() {
     const { currentUser } = useAuth();
@@ -28,6 +30,8 @@ export default function UserDashboard() {
     const [myChats, setMyChats] = useState([]);
     const [favorites, setFavorites] = useState([]); // { favDocId, astroId, ...astroData }
     const [togglingFav, setTogglingFav] = useState(null);
+    const [birthDetails, setBirthDetails] = useState(null);
+    const [birthLoading, setBirthLoading] = useState(true);
 
     useEffect(() => {
         if (!currentUser) return;
@@ -98,6 +102,21 @@ export default function UserDashboard() {
         }
 
         fetchSessions();
+
+        // Fetch birth details
+        async function fetchBirthDetails() {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                if (userDoc.exists() && userDoc.data().birthDetails) {
+                    setBirthDetails(userDoc.data().birthDetails);
+                }
+            } catch (err) {
+                console.error('Error fetching birth details:', err);
+            } finally {
+                setBirthLoading(false);
+            }
+        }
+        fetchBirthDetails();
 
         // Fetch user's chats
         async function fetchChats() {
@@ -229,6 +248,20 @@ export default function UserDashboard() {
                     <Link to="/astrologers">{t('favorites.browseAstrologers')}</Link>
                 </Button>
             </div>
+
+            {/* Birth Chart & Daily Horoscope */}
+            {!birthLoading && (
+                <div className="grid gap-6 mb-8">
+                    <div className="grid lg:grid-cols-2 gap-6">
+                        <BirthChart
+                            birthDetails={birthDetails}
+                            userId={currentUser?.uid}
+                            onSave={(details) => setBirthDetails(details)}
+                        />
+                        {birthDetails && <DailyHoroscope birthDetails={birthDetails} />}
+                    </div>
+                </div>
+            )}
 
             {loading ? (
                 <div className="space-y-4">
