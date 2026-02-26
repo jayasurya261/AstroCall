@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 function getRedirectPath(role) {
     if (role === "astrologer") return "/astrologer-dashboard";
@@ -13,9 +12,6 @@ function getRedirectPath(role) {
 }
 
 export default function Login() {
-    const [isLogin, setIsLogin] = useState(true);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
     const [role, setRole] = useState("user");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -25,28 +21,7 @@ export default function Login() {
     const [pendingGoogleUser, setPendingGoogleUser] = useState(null);
 
     const navigate = useNavigate();
-    const { login, signup, loginWithGoogle, completeGoogleLoginWithRole } = useAuth();
-
-    // ─── Email/Password Submit ───────────────────────────────────────
-    async function handleSubmit(e) {
-        e.preventDefault();
-        setError("");
-        setLoading(true);
-
-        try {
-            if (isLogin) {
-                const { role: storedRole } = await login(email, password);
-                navigate(getRedirectPath(storedRole));
-            } else {
-                await signup(email, password, role);
-                navigate(getRedirectPath(role));
-            }
-        } catch (err) {
-            setError(err.message || "Failed to authenticate");
-        }
-
-        setLoading(false);
-    }
+    const { loginWithGoogle, completeGoogleLoginWithRole } = useAuth();
 
     // ─── Google Sign-In ──────────────────────────────────────────────
     async function handleGoogleLogin() {
@@ -128,90 +103,23 @@ export default function Login() {
         );
     }
 
-    // ─── RENDER: Main Login / Signup Form ────────────────────────────
+    // ─── RENDER: Google Sign-In Only ─────────────────────────────────
     return (
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
             <Card className="w-full max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-2xl text-center">
-                        {isLogin ? "Welcome Back" : "Create an Account"}
-                    </CardTitle>
+                    <CardTitle className="text-2xl text-center">Welcome to AstroCall</CardTitle>
                     <CardDescription className="text-center">
-                        {isLogin
-                            ? "Enter your credentials to access your account."
-                            : "Sign up as a user or an astrologer."}
+                        Sign in with your Google account to get started.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {error && <div className="p-3 text-sm text-red-500 bg-red-100/50 rounded-md border border-red-200">{error}</div>}
-
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="you@example.com"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                            />
-                        </div>
-
-                        {!isLogin && (
-                            <div className="space-y-2">
-                                <Label>I want to join as:</Label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Button
-                                        type="button"
-                                        variant={role === "user" ? "default" : "outline"}
-                                        onClick={() => setRole("user")}
-                                    >
-                                        User
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant={role === "astrologer" ? "default" : "outline"}
-                                        onClick={() => setRole("astrologer")}
-                                    >
-                                        Astrologer
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-                        <Button disabled={loading} className="w-full" type="submit">
-                            {loading ? "Please wait..." : isLogin ? "Log In" : "Sign Up"}
-                        </Button>
-                    </form>
-
-                    <div className="relative my-4">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 text-muted-foreground">
-                                Or continue with
-                            </span>
-                        </div>
-                    </div>
+                    {error && <div className="p-3 mb-4 text-sm text-red-500 bg-red-100/50 rounded-md border border-red-200">{error}</div>}
 
                     <Button
                         variant="outline"
                         type="button"
-                        className="w-full flex items-center gap-2"
+                        className="w-full flex items-center gap-2 h-12 text-base"
                         onClick={handleGoogleLogin}
                         disabled={loading}
                     >
@@ -227,20 +135,9 @@ export default function Login() {
                             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                         </svg>
-                        Google
+                        {loading ? "Please wait..." : "Continue with Google"}
                     </Button>
                 </CardContent>
-                <CardFooter className="flex justify-center">
-                    <Button
-                        variant="link"
-                        className="text-sm text-muted-foreground"
-                        onClick={() => { setIsLogin(!isLogin); setError(""); }}
-                    >
-                        {isLogin
-                            ? "Don't have an account? Sign up"
-                            : "Already have an account? Log in"}
-                    </Button>
-                </CardFooter>
             </Card>
         </div>
     );

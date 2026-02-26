@@ -39,14 +39,9 @@ export default function Home() {
                     </p>
                     <div className="flex flex-col gap-4 sm:flex-row">
                         <Button asChild size="lg" className="h-14 px-8 text-base shadow-lg shadow-primary/25">
-                            <Link to="/astrologers">
+                            <Link to="/login">
                                 <Video className="w-5 h-5 mr-2" />
                                 {t('home.getStarted')}
-                            </Link>
-                        </Button>
-                        <Button asChild variant="outline" size="lg" className="h-14 px-8 text-base bg-background/50 backdrop-blur-sm border-2">
-                            <Link to="/about">
-                                {t('home.browseAstrologers')}
                             </Link>
                         </Button>
                     </div>
