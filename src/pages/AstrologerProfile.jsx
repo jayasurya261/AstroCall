@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
     Star, Video, Phone, CheckCircle2, ArrowLeft, Loader2,
-    Globe, Clock, MessageSquare, TrendingUp, UserX
+    Globe, Clock, MessageSquare, TrendingUp, UserX, Heart
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getOrCreateChat } from '@/pages/Chat';
@@ -24,6 +24,9 @@ export default function AstrologerProfile() {
     const [loading, setLoading] = useState(true);
     const [bookingId, setBookingId] = useState(null);
     const [startingChat, setStartingChat] = useState(false);
+    const [isFavorited, setIsFavorited] = useState(false);
+    const [favDocId, setFavDocId] = useState(null);
+    const [togglingFav, setTogglingFav] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -51,7 +54,25 @@ export default function AstrologerProfile() {
             }
         }
         fetchData();
-    }, [id]);
+
+        // Check if favorited
+        async function checkFavorite() {
+            if (!currentUser) return;
+            try {
+                const q = query(
+                    collection(db, 'favorites'),
+                    where('userId', '==', currentUser.uid),
+                    where('astroId', '==', id)
+                );
+                const snap = await getDocs(q);
+                if (!snap.empty) {
+                    setIsFavorited(true);
+                    setFavDocId(snap.docs[0].id);
+                }
+            } catch (e) { /* ignore */ }
+        }
+        checkFavorite();
+    }, [id, currentUser]);
 
     async function handleBook(callType) {
         if (!currentUser) {
@@ -170,6 +191,34 @@ export default function AstrologerProfile() {
                                 <Badge variant={astro.isOnline ? "default" : "secondary"} className="ml-2">
                                     {astro.isOnline ? "Online" : "Offline"}
                                 </Badge>
+                                <button
+                                    className="ml-auto p-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                                    disabled={togglingFav}
+                                    title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                                    onClick={async () => {
+                                        if (!currentUser) { navigate('/login'); return; }
+                                        setTogglingFav(true);
+                                        try {
+                                            if (isFavorited) {
+                                                await deleteDoc(doc(db, 'favorites', favDocId));
+                                                setIsFavorited(false);
+                                                setFavDocId(null);
+                                                toast('Removed from favorites');
+                                            } else {
+                                                const ref = await addDoc(collection(db, 'favorites'), { userId: currentUser.uid, astroId: id, createdAt: serverTimestamp() });
+                                                setIsFavorited(true);
+                                                setFavDocId(ref.id);
+                                                toast('Added to favorites!');
+                                            }
+                                        } catch (err) {
+                                            console.error(err);
+                                        } finally {
+                                            setTogglingFav(false);
+                                        }
+                                    }}
+                                >
+                                    <Heart className={`w-6 h-6 transition-colors ${isFavorited ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground hover:text-rose-400'}`} />
+                                </button>
                             </div>
 
                             {/* Rating */}

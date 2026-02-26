@@ -9,10 +9,12 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Clock, PhoneCall, Calendar, Video, Phone, Star, MessageSquare, Loader2, CheckCircle2, MessageCircle, Heart } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export default function UserDashboard() {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -220,11 +222,11 @@ export default function UserDashboard() {
         <div className="container py-10 mx-auto px-4 md:px-8">
             <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">My Sessions</h1>
-                    <p className="text-muted-foreground mt-2">Manage and review your astrology consultations.</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('nav.mySessions')}</h1>
+                    <p className="text-muted-foreground mt-2">{t('dashboard.todaySessions')}</p>
                 </div>
                 <Button asChild>
-                    <Link to="/astrologers">Book New Session</Link>
+                    <Link to="/astrologers">{t('favorites.browseAstrologers')}</Link>
                 </Button>
             </div>
 
@@ -239,10 +241,10 @@ export default function UserDashboard() {
             ) : sessions.length === 0 ? (
                 <div className="text-center py-20 bg-muted/30 rounded-lg border border-dashed">
                     <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
-                    <h3 className="text-lg font-medium text-foreground">No sessions yet</h3>
-                    <p className="text-muted-foreground mt-1">You haven't booked any consultations with our astrologers.</p>
+                    <h3 className="text-lg font-medium text-foreground">{t('dashboard.noSessions')}</h3>
+                    <p className="text-muted-foreground mt-1">{t('dashboard.noSessions')}</p>
                     <Button asChild className="mt-4">
-                        <Link to="/astrologers">Browse Astrologers</Link>
+                        <Link to="/astrologers">{t('favorites.browseAstrologers')}</Link>
                     </Button>
                 </div>
             ) : (
@@ -259,9 +261,9 @@ export default function UserDashboard() {
                                             {/* Call type badge */}
                                             <Badge variant="secondary" className="flex items-center gap-1 text-xs">
                                                 {session.callType === 'video' ? (
-                                                    <><Video className="w-3 h-3" /> Video</>
+                                                    <>{<Video className="w-3 h-3" />} {t('astrologers.videoCall')}</>
                                                 ) : (
-                                                    <><Phone className="w-3 h-3" /> Voice</>
+                                                    <>{<Phone className="w-3 h-3" />} {t('astrologers.voiceCall')}</>
                                                 )}
                                             </Badge>
                                         </div>
@@ -288,7 +290,7 @@ export default function UserDashboard() {
                                                 <Clock className="w-4 h-4 animate-pulse" />
                                                 Waiting for acceptance
                                             </div>
-                                            <p className="text-xs text-yellow-600">The astrologer will accept your request soon</p>
+                                            <p className="text-xs text-yellow-600">{t('dashboard.pendingCalls')}</p>
                                         </div>
                                     </div>
                                 )}
@@ -301,9 +303,9 @@ export default function UserDashboard() {
                                             className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-md font-medium hover:bg-primary/90 transition-colors"
                                         >
                                             {session.callType === 'video' ? (
-                                                <><Video className="w-4 h-4" /> Join Video</>
+                                                <>{<Video className="w-4 h-4" />} {t('dashboard.joinCall')}</>
                                             ) : (
-                                                <><PhoneCall className="w-4 h-4" /> Join Voice</>
+                                                <>{<PhoneCall className="w-4 h-4" />} {t('dashboard.joinCall')}</>
                                             )}
                                         </button>
                                     </div>
@@ -336,7 +338,7 @@ export default function UserDashboard() {
                                                 }}
                                             >
                                                 <Star className="w-4 h-4" />
-                                                Leave Review
+                                                {t('dashboard.leaveReview')}
                                             </Button>
                                         )}
                                     </div>

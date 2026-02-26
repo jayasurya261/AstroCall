@@ -14,6 +14,8 @@ import AstrologerReviews from "@/pages/AstrologerReviews";
 import About from "@/pages/About";
 import AstrologerProfile from "@/pages/AstrologerProfile";
 import Chat from "@/pages/Chat";
+import Favorites from "@/pages/Favorites";
+import UserProfile from "@/pages/UserProfile";
 import CallRoom from "@/pages/CallRoom";
 
 function HomeRedirect() {
@@ -43,6 +45,8 @@ function App() {
                 <Route path="/about" element={<About />} />
                 <Route path="/astrologer/:id" element={<AstrologerProfile />} />
                 <Route path="/chat" element={<Chat />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/profile" element={<UserProfile />} />
                 <Route path="/call-room" element={<CallRoom />} />
               </Routes>
             </main>

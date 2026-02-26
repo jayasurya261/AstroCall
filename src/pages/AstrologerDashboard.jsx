@@ -10,10 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Clock, PhoneCall, Calendar, Video, Phone, Check, X, Power, DollarSign, Camera, Star, MessageSquare, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export default function AstrologerDashboard() {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(null);
@@ -341,8 +343,8 @@ export default function AstrologerDashboard() {
                         />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground">Astrologer Dashboard</h1>
-                        <p className="text-muted-foreground mt-2">Manage your consultations and availability.</p>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('nav.dashboard')}</h1>
+                        <p className="text-muted-foreground mt-2">{t('dashboard.todaySessions')}</p>
                     </div>
                 </div>
 
@@ -366,7 +368,7 @@ export default function AstrologerDashboard() {
                                 disabled={savingRate}
                                 className="h-7 px-2 text-xs"
                             >
-                                {savingRate ? '...' : 'Save'}
+                                {savingRate ? '...' : t('dashboard.saveRate')}
                             </Button>
                         )}
                     </div>
@@ -381,7 +383,7 @@ export default function AstrologerDashboard() {
                             }`}
                     >
                         <Power className="w-4 h-4" />
-                        {togglingStatus ? 'Updating...' : isOnline ? 'Online' : 'Offline'}
+                        {togglingStatus ? '...' : isOnline ? t('astrologers.online') : t('astrologers.offline')}
                     </Button>
                     <span className={`w-3 h-3 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></span>
                 </div>
@@ -392,25 +394,25 @@ export default function AstrologerDashboard() {
                 <Card className="bg-yellow-50 border-yellow-200">
                     <CardContent className="p-4 text-center">
                         <p className="text-2xl font-bold text-yellow-700">{pendingCount}</p>
-                        <p className="text-xs text-yellow-600 font-medium">Pending</p>
+                        <p className="text-xs text-yellow-600 font-medium">{t('dashboard.pendingCalls')}</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-green-50 border-green-200">
                     <CardContent className="p-4 text-center">
                         <p className="text-2xl font-bold text-green-700">{activeCount}</p>
-                        <p className="text-xs text-green-600 font-medium">Active</p>
+                        <p className="text-xs text-green-600 font-medium">{t('dashboard.activeCalls')}</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-blue-50 border-blue-200">
                     <CardContent className="p-4 text-center">
                         <p className="text-2xl font-bold text-blue-700">{todaysCalls}</p>
-                        <p className="text-xs text-blue-600 font-medium">Today's Calls</p>
+                        <p className="text-xs text-blue-600 font-medium">{t('dashboard.todaySessions')}</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-muted/50">
                     <CardContent className="p-4 text-center">
                         <p className="text-2xl font-bold text-foreground">{sessions.length}</p>
-                        <p className="text-xs text-muted-foreground font-medium">Total</p>
+                        <p className="text-xs text-muted-foreground font-medium">{t('profile.sessions')}</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-yellow-50 border-yellow-200">
@@ -419,7 +421,7 @@ export default function AstrologerDashboard() {
                             <Star className="w-5 h-5 fill-yellow-500 text-yellow-500" />
                             {avgRating || '—'}
                         </p>
-                        <p className="text-xs text-yellow-600 font-medium">{myReviews.length} Reviews</p>
+                        <p className="text-xs text-yellow-600 font-medium">{myReviews.length} {t('profile.reviews')}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -436,9 +438,9 @@ export default function AstrologerDashboard() {
             ) : sessions.length === 0 ? (
                 <div className="text-center py-20 bg-muted/30 rounded-lg border border-dashed">
                     <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
-                    <h3 className="text-lg font-medium text-foreground">No bookings yet</h3>
+                    <h3 className="text-lg font-medium text-foreground">{t('dashboard.noSessions')}</h3>
                     <p className="text-muted-foreground mt-1">
-                        {isOnline ? 'You are online. Users can book consultations with you.' : 'Go online to start receiving bookings.'}
+                        {isOnline ? t('dashboard.todaySessions') : t('dashboard.goOnline')}
                     </p>
                 </div>
             ) : (
@@ -454,9 +456,9 @@ export default function AstrologerDashboard() {
                                             </Badge>
                                             <Badge variant="secondary" className="flex items-center gap-1 text-xs">
                                                 {session.callType === 'video' ? (
-                                                    <><Video className="w-3 h-3" /> Video Call</>
+                                                    <><Video className="w-3 h-3" /> {t('astrologers.videoCall')}</>
                                                 ) : (
-                                                    <><Phone className="w-3 h-3" /> Voice Call</>
+                                                    <><Phone className="w-3 h-3" /> {t('astrologers.voiceCall')}</>
                                                 )}
                                             </Badge>
                                         </div>
@@ -485,7 +487,7 @@ export default function AstrologerDashboard() {
                                             className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
                                         >
                                             <Check className="w-4 h-4" />
-                                            {actionLoading === session.id + '-accept' ? 'Accepting...' : 'Accept'}
+                                            {actionLoading === session.id + '-accept' ? '...' : t('dashboard.accept')}
                                         </Button>
                                         <Button
                                             onClick={() => handleReject(session.id)}
@@ -494,7 +496,7 @@ export default function AstrologerDashboard() {
                                             className="w-full gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
                                         >
                                             <X className="w-4 h-4" />
-                                            {actionLoading === session.id + '-reject' ? 'Rejecting...' : 'Reject'}
+                                            {actionLoading === session.id + '-reject' ? '...' : t('dashboard.reject')}
                                         </Button>
                                     </div>
                                 )}
@@ -507,9 +509,9 @@ export default function AstrologerDashboard() {
                                             className="gap-2"
                                         >
                                             {session.callType === 'video' ? (
-                                                <><Video className="w-4 h-4" /> Join Video Call</>
+                                                <><Video className="w-4 h-4" /> {t('dashboard.joinCall')}</>
                                             ) : (
-                                                <><PhoneCall className="w-4 h-4" /> Join Voice Call</>
+                                                <><PhoneCall className="w-4 h-4" /> {t('dashboard.joinCall')}</>
                                             )}
                                         </Button>
                                     </div>
@@ -533,7 +535,7 @@ export default function AstrologerDashboard() {
                                     My Reviews
                                     {myReviews.length > 0 && (
                                         <span className="text-sm font-normal text-yellow-700">
-                                            {avgRating} ★ · {myReviews.length} reviews
+                                            {avgRating} ★ · {myReviews.length} {t('profile.reviews')}
                                         </span>
                                     )}
                                 </h3>
@@ -554,20 +556,20 @@ export default function AstrologerDashboard() {
             <div className="mt-10">
                 <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1 flex items-center gap-2">
                     <MessageCircle className="w-6 h-6 text-blue-600" />
-                    Client Messages
+                    {t('dashboard.clientMessages')}
                     {myChats.length > 0 && (
                         <Badge variant="secondary" className="text-xs ml-2">
                             {myChats.length}
                         </Badge>
                     )}
                 </h2>
-                <p className="text-muted-foreground mb-6 text-sm">Click on a conversation to start chatting.</p>
+                <p className="text-muted-foreground mb-6 text-sm">{t('dashboard.clickToChat')}</p>
 
                 {myChats.length === 0 ? (
                     <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
                         <MessageCircle className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-40" />
-                        <h3 className="text-base font-medium text-foreground">No messages yet</h3>
-                        <p className="text-sm text-muted-foreground mt-1">When users message you, their conversations will appear here.</p>
+                        <h3 className="text-base font-medium text-foreground">{t('dashboard.noMessages')}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{t('dashboard.messagesWillAppear')}</p>
                     </div>
                 ) : (
                     <div className="grid gap-2 max-h-[500px] overflow-y-auto pr-1">
@@ -595,7 +597,7 @@ export default function AstrologerDashboard() {
                                     </div>
                                     <div className="flex items-center justify-between mt-0.5">
                                         <p className="text-xs text-muted-foreground truncate">
-                                            {chat.lastMessage || 'No messages yet'}
+                                            {chat.lastMessage || t('chat.noMessages')}
                                         </p>
                                         <span className="text-xs text-muted-foreground shrink-0 ml-3">
                                             {chat.userEmail}

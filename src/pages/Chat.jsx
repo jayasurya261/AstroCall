@@ -11,9 +11,11 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, ArrowLeft, Loader2, MessageSquare, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Chat() {
     const { currentUser, userRole } = useAuth();
+    const { t } = useTranslation();
     const [searchParams] = useSearchParams();
     const selectedChatId = searchParams.get('id');
 
@@ -160,12 +162,12 @@ export default function Chat() {
                     <div className="p-4 border-b">
                         <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                             <MessageSquare className="w-5 h-5 text-primary" />
-                            Messages
+                            {t('chat.title')}
                         </h2>
                         <div className="relative mt-3">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search conversations..."
+                                placeholder={t('chat.searchPlaceholder')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-9 h-9"
@@ -184,8 +186,8 @@ export default function Chat() {
                                 <MessageSquare className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-40" />
                                 <p className="text-sm text-muted-foreground">
                                     {chats.length === 0
-                                        ? 'No conversations yet. Start chatting from an astrologer\'s profile!'
-                                        : 'No results found.'}
+                                        ? t('chat.startChat')
+                                        : t('common.noData')}
                                 </p>
                             </div>
                         ) : (
@@ -207,7 +209,7 @@ export default function Chat() {
                                             </span>
                                         </div>
                                         <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                            {chat.lastMessage || 'No messages yet'}
+                                            {chat.lastMessage || t('chat.noMessages')}
                                         </p>
                                     </div>
                                 </button>
@@ -241,7 +243,7 @@ export default function Chat() {
                                 </div>
                                 {userRole === 'user' && (
                                     <Button asChild variant="outline" size="sm">
-                                        <Link to={`/astrologer/${selectedChat.astroId}`}>View Profile</Link>
+                                        <Link to={`/astrologer/${selectedChat.astroId}`}>{t('favorites.viewProfile')}</Link>
                                     </Button>
                                 )}
                             </div>
@@ -250,7 +252,7 @@ export default function Chat() {
                             <div className="flex-1 overflow-y-auto p-4 space-y-3">
                                 {messages.length === 0 ? (
                                     <div className="flex items-center justify-center h-full">
-                                        <p className="text-sm text-muted-foreground">Send a message to start the conversation!</p>
+                                        <p className="text-sm text-muted-foreground">{t('chat.typeMessage')}</p>
                                     </div>
                                 ) : (
                                     messages.map(msg => {
@@ -259,8 +261,8 @@ export default function Chat() {
                                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                                 <div
                                                     className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isMe
-                                                            ? 'bg-primary text-primary-foreground rounded-br-md'
-                                                            : 'bg-background border rounded-bl-md'
+                                                        ? 'bg-primary text-primary-foreground rounded-br-md'
+                                                        : 'bg-background border rounded-bl-md'
                                                         }`}
                                                 >
                                                     <p>{msg.text}</p>
@@ -282,7 +284,7 @@ export default function Chat() {
                                 <Input
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
-                                    placeholder="Type a message..."
+                                    placeholder={t('chat.typeMessage')}
                                     className="flex-1 h-10"
                                     disabled={sending}
                                 />
@@ -296,9 +298,9 @@ export default function Chat() {
                             <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                                 <MessageSquare className="w-10 h-10 text-primary" />
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground">Your Messages</h3>
+                            <h3 className="text-lg font-semibold text-foreground">{t('chat.title')}</h3>
                             <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                                Select a conversation from the sidebar or start a new chat from an astrologer's profile.
+                                {t('chat.selectChatDesc')}
                             </p>
                         </div>
                     )}

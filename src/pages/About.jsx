@@ -2,18 +2,20 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Star, Shield, Users, Globe, Heart, Zap, Phone, Video } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function About() {
+    const { t } = useTranslation();
     return (
         <div className="container py-12 mx-auto px-4 md:px-8 max-w-4xl">
 
             {/* Page Header */}
             <div className="text-center mb-16">
                 <h1 className="text-4xl font-extrabold tracking-tight text-foreground md:text-5xl mb-4">
-                    About <span className="text-primary">AstroCall</span>
+                    {t('about.title')}
                 </h1>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                    Bridging the ancient wisdom of astrology with modern technology to bring you meaningful, personalized guidance — anytime, anywhere.
+                    {t('about.subtitle')}
                 </p>
             </div>
 
@@ -21,17 +23,17 @@ export default function About() {
             <section className="mb-14">
                 <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
                     <Heart className="w-6 h-6 text-primary" />
-                    Our Story
+                    {t('about.ourStory')}
                 </h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                     <p>
-                        AstroCall was born from a simple idea — what if anyone, regardless of where they live, could speak directly with a trusted, experienced astrologer in real time? Traditional astrology consultations required visiting a practitioner in person, often involving long travel and scheduling hassles. We wanted to change that.
+                        {t('about.ourStoryP1')}
                     </p>
                     <p>
-                        Founded in 2025, AstroCall set out to create a seamless digital platform where seekers of cosmic guidance can instantly connect with verified astrologers through high-quality video and voice calls. Whether you're looking for clarity on your career, relationships, health, or spiritual journey, our platform connects you with the right expert in minutes — not days.
+                        {t('about.ourStoryP2')}
                     </p>
                     <p>
-                        Today, AstroCall serves thousands of users every month, with a growing community of professional astrologers from across India and beyond. Our mission remains unchanged: to make authentic, life-changing astrological guidance accessible to everyone.
+                        {t('about.ourStoryP3')}
                     </p>
                 </div>
             </section>
@@ -40,11 +42,11 @@ export default function About() {
             <section className="mb-14">
                 <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
                     <Zap className="w-6 h-6 text-primary" />
-                    What We Offer
+                    {t('about.whatWeOffer')}
                 </h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                     <p>
-                        AstroCall is more than just a calling platform — it's a complete ecosystem designed around your spiritual needs.
+                        {t('about.whatWeOfferDesc')}
                     </p>
                     <ul className="list-disc list-inside space-y-3 ml-2">
                         <li>
@@ -73,10 +75,10 @@ export default function About() {
             <section className="mb-14">
                 <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
                     <Globe className="w-6 h-6 text-primary" />
-                    How It Works
+                    {t('about.howItWorks')}
                 </h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
-                    <p>Getting started with AstroCall is simple. Here's how it works:</p>
+                    <p>{t('about.howItWorksDesc')}</p>
                     <ol className="list-decimal list-inside space-y-3 ml-2">
                         <li>
                             <strong className="text-foreground">Create Your Account</strong> — Sign up for free using your email or Google account. Choose whether you want to join as a user seeking guidance or as an astrologer offering consultations.
@@ -104,11 +106,11 @@ export default function About() {
             <section className="mb-14">
                 <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
                     <Star className="w-6 h-6 text-primary" />
-                    For Astrologers
+                    {t('about.forAstrologers')}
                 </h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                     <p>
-                        Are you a practicing astrologer looking to expand your reach? AstroCall gives you a powerful platform to connect with clients worldwide without worrying about marketing, scheduling, or technical infrastructure.
+                        {t('about.forAstrologersDesc')}
                     </p>
                     <ul className="list-disc list-inside space-y-3 ml-2">
                         <li>
@@ -137,7 +139,7 @@ export default function About() {
             <section className="mb-14">
                 <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
                     <Shield className="w-6 h-6 text-primary" />
-                    Our Values
+                    {t('about.ourValues')}
                 </h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                     <ul className="list-disc list-inside space-y-3 ml-2">
@@ -164,7 +166,7 @@ export default function About() {
             <section className="mb-14">
                 <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
                     <Video className="w-6 h-6 text-primary" />
-                    Our Technology
+                    {t('about.ourTech')}
                 </h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                     <p>
@@ -189,21 +191,21 @@ export default function About() {
 
             {/* Contact / CTA */}
             <section className="text-center py-12 border-t border-border">
-                <h2 className="text-2xl font-bold text-foreground mb-4">Ready to Begin Your Journey?</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-4">{t('about.ctaTitle')}</h2>
                 <p className="text-muted-foreground mb-8 max-w-lg mx-auto leading-relaxed">
-                    Whether you're seeking answers from the cosmos or you're an astrologer ready to share your wisdom — AstroCall is the platform for you.
+                    {t('about.ctaDesc')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Button asChild size="lg" className="h-12 px-8 shadow-lg shadow-primary/20">
                         <Link to="/astrologers">
                             <Phone className="w-5 h-5 mr-2" />
-                            Find an Astrologer
+                            {t('about.findAstrologer')}
                         </Link>
                     </Button>
                     <Button asChild variant="outline" size="lg" className="h-12 px-8">
                         <Link to="/login">
                             <Users className="w-5 h-5 mr-2" />
-                            Join as Astrologer
+                            {t('about.joinAsAstrologer')}
                         </Link>
                     </Button>
                 </div>

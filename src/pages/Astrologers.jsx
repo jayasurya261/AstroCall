@@ -2,18 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, query, where, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Video, Phone, Star, CheckCircle2, Users, Loader2, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { Video, Phone, Star, CheckCircle2, Users, Loader2, MessageSquare, ChevronDown, ChevronUp, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { getOrCreateChat } from '@/pages/Chat';
+import { useTranslation } from 'react-i18next';
 
 export default function Astrologers() {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [astrologers, setAstrologers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [bookingId, setBookingId] = useState(null);
@@ -22,6 +24,9 @@ export default function Astrologers() {
     const [expandedReviews, setExpandedReviews] = useState(null); // astroId or null
     const [astroReviews, setAstroReviews] = useState({}); // { [astroId]: [...reviews] }
     const [loadingReviews, setLoadingReviews] = useState(null); // astroId or null
+    const [favoriteIds, setFavoriteIds] = useState(new Set());
+    const [favDocMap, setFavDocMap] = useState({}); // { astroId: favDocId }
+    const [togglingFav, setTogglingFav] = useState(null);
 
     useEffect(() => {
         async function fetchAstrologers() {
@@ -46,7 +51,30 @@ export default function Astrologers() {
         }
 
         fetchAstrologers();
-    }, []);
+
+        // Fetch user favorites
+        async function fetchFavorites() {
+            if (!currentUser) return;
+            try {
+                const q = query(
+                    collection(db, 'favorites'),
+                    where('userId', '==', currentUser.uid)
+                );
+                const snap = await getDocs(q);
+                const ids = new Set();
+                const docMap = {};
+                snap.docs.forEach(d => {
+                    ids.add(d.data().astroId);
+                    docMap[d.data().astroId] = d.id;
+                });
+                setFavoriteIds(ids);
+                setFavDocMap(docMap);
+            } catch (err) {
+                console.error('Error fetching favorites:', err);
+            }
+        }
+        fetchFavorites();
+    }, [currentUser]);
 
     // Toggle & fetch reviews for an astrologer
     async function toggleReviews(astroId) {
@@ -118,10 +146,10 @@ export default function Astrologers() {
         <div className="container py-10 mx-auto px-4 md:px-8">
             <div className="mb-10 text-center">
                 <h1 className="text-4xl font-extrabold tracking-tight text-foreground md:text-5xl mb-4">
-                    Our <span className="text-primary">Astrologers</span>
+                    {t('astrologers.title')}
                 </h1>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    Connect instantly with verified experts. Choose your preferred astrologer and start a live consultation.
+                    {t('astrologers.subtitle')}
                 </p>
             </div>
 
@@ -146,7 +174,7 @@ export default function Astrologers() {
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {astrologers.map(astro => (
                         <Card key={astro.id} className={`overflow-hidden flex flex-col transition-colors ${astro.isOnline ? 'hover:border-primary/50' : 'opacity-75'}`}>
-                            <CardHeader className="p-6 pb-0 flex flex-row items-start gap-4 space-y-0">
+                            <CardHeader className="p-6 pb-0 flex flex-row items-start gap-4 space-y-0 relative">
                                 <Link to={`/astrologer/${astro.id}`} className="relative group cursor-pointer">
                                     <Avatar className="w-20 h-20 border-2 border-primary/20 group-hover:border-primary/50 transition-colors">
                                         <AvatarImage src={astro.photoURL || `https://i.pravatar.cc/150?u=${astro.id}`} />
@@ -161,11 +189,40 @@ export default function Astrologers() {
                                         </Link>
                                         <CheckCircle2 className="w-4 h-4 text-primary fill-primary/20" />
                                     </div>
+                                    {/* Heart button - absolute top right */}
+                                    <button
+                                        className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                                        disabled={togglingFav === astro.id}
+                                        title={favoriteIds.has(astro.id) ? 'Remove from favorites' : 'Add to favorites'}
+                                        onClick={async () => {
+                                            if (!currentUser) { navigate('/login'); return; }
+                                            setTogglingFav(astro.id);
+                                            try {
+                                                if (favoriteIds.has(astro.id)) {
+                                                    await deleteDoc(doc(db, 'favorites', favDocMap[astro.id]));
+                                                    setFavoriteIds(prev => { const n = new Set(prev); n.delete(astro.id); return n; });
+                                                    setFavDocMap(prev => { const n = { ...prev }; delete n[astro.id]; return n; });
+                                                    toast(t('favorites.removed'));
+                                                } else {
+                                                    const ref = await addDoc(collection(db, 'favorites'), { userId: currentUser.uid, astroId: astro.id, createdAt: serverTimestamp() });
+                                                    setFavoriteIds(prev => new Set(prev).add(astro.id));
+                                                    setFavDocMap(prev => ({ ...prev, [astro.id]: ref.id }));
+                                                    toast(t('favorites.added'));
+                                                }
+                                            } catch (err) {
+                                                console.error(err);
+                                            } finally {
+                                                setTogglingFav(null);
+                                            }
+                                        }}
+                                    >
+                                        <Heart className={`w-5 h-5 transition-colors ${favoriteIds.has(astro.id) ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground hover:text-rose-400'}`} />
+                                    </button>
                                     <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 mb-2">
                                         <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                                        <span>{astro.rating || 'New'}</span>
+                                        <span>{astro.rating || t('common.new')}</span>
                                         <span className="text-muted-foreground font-normal ml-1">
-                                            ({astro.reviews || 0} reviews)
+                                            ({astro.reviews || 0} {t('profile.reviews')})
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -173,7 +230,7 @@ export default function Astrologers() {
                                             ${astro.hourlyRate || 30}/hr
                                         </p>
                                         <Badge variant={astro.isOnline ? "default" : "secondary"} className="text-xs">
-                                            {astro.isOnline ? "Online" : "Offline"}
+                                            {astro.isOnline ? t('astrologers.online') : t('astrologers.offline')}
                                         </Badge>
                                     </div>
                                 </div>
@@ -199,7 +256,7 @@ export default function Astrologers() {
                                         className="flex items-center gap-1.5 text-xs font-medium text-yellow-700 hover:text-yellow-800 transition-colors w-full justify-center py-1.5 rounded-md hover:bg-yellow-50"
                                     >
                                         <MessageSquare className="w-3.5 h-3.5" />
-                                        {expandedReviews === astro.id ? 'Hide Reviews' : `View ${astro.reviews} Reviews`}
+                                        {expandedReviews === astro.id ? t('astrologers.hideReviews') : t('astrologers.viewReviews', { count: astro.reviews })}
                                         {expandedReviews === astro.id ? (
                                             <ChevronUp className="w-3.5 h-3.5" />
                                         ) : (
@@ -217,7 +274,7 @@ export default function Astrologers() {
                                             <Loader2 className="w-5 h-5 animate-spin text-yellow-600" />
                                         </div>
                                     ) : (astroReviews[astro.id] || []).length === 0 ? (
-                                        <p className="text-xs text-muted-foreground text-center py-3">No reviews yet.</p>
+                                        <p className="text-xs text-muted-foreground text-center py-3">{t('astrologers.noReviews')}</p>
                                     ) : (
                                         <div className="space-y-3">
                                             {astroReviews[astro.id].map(review => (
@@ -272,7 +329,7 @@ export default function Astrologers() {
                                             ) : (
                                                 <Video className="w-4 h-4" />
                                             )}
-                                            Video
+                                            {t('astrologers.videoCall')}
                                         </Button>
                                         <Button
                                             variant="outline"
@@ -285,19 +342,19 @@ export default function Astrologers() {
                                             ) : (
                                                 <Phone className="w-4 h-4" />
                                             )}
-                                            Voice
+                                            {t('astrologers.voiceCall')}
                                         </Button>
                                     </>
                                 ) : (
                                     <div className="flex-1 text-center py-2 text-sm text-muted-foreground bg-muted/30 rounded-md">
-                                        Currently offline
+                                        {t('astrologers.currentlyOffline')}
                                     </div>
                                 )}
                                 <Button
                                     variant="outline"
                                     size="icon"
                                     className="shrink-0"
-                                    title="Send Message"
+                                    title={t('astrologers.sendMessage')}
                                     onClick={async () => {
                                         if (!currentUser) { navigate('/login'); return; }
                                         try {

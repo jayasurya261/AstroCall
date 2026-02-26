@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,6 +15,8 @@ import {
 } from "lucide-react";
 
 export default function Home() {
+    const { t } = useTranslation();
+
     return (
         <div className="flex flex-col min-h-screen">
 
@@ -23,27 +26,27 @@ export default function Home() {
                 <div className="container relative z-10 flex flex-col items-center mx-auto text-center">
                     <Badge variant="secondary" className="px-3 py-1 mb-6 text-sm font-medium tracking-wide text-primary bg-primary/10 border-primary/20">
                         <Sparkles className="w-4 h-4 mr-2" />
-                        Live Astrology Consultations
+                        {t('home.liveConsultation')}
                     </Badge>
                     <h1 className="max-w-4xl mb-6 text-5xl font-extrabold tracking-tight md:text-7xl lg:text-8xl text-foreground">
-                        Find Clarity with <br className="hidden md:block" />
+                        {t('home.title')} <br className="hidden md:block" />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-500">
                             AstroCall
                         </span>
                     </h1>
                     <p className="max-w-2xl mb-10 text-lg md:text-xl text-muted-foreground">
-                        Connect instantly with verified, top-rated astrologers through seamless high-quality video and voice calls. Uncover what the stars hold for you today.
+                        {t('home.subtitle')}
                     </p>
                     <div className="flex flex-col gap-4 sm:flex-row">
                         <Button asChild size="lg" className="h-14 px-8 text-base shadow-lg shadow-primary/25">
                             <Link to="/astrologers">
                                 <Video className="w-5 h-5 mr-2" />
-                                Start a Live Call
+                                {t('home.getStarted')}
                             </Link>
                         </Button>
                         <Button asChild variant="outline" size="lg" className="h-14 px-8 text-base bg-background/50 backdrop-blur-sm border-2">
                             <Link to="/about">
-                                How it Works
+                                {t('home.browseAstrologers')}
                             </Link>
                         </Button>
                     </div>
@@ -52,11 +55,11 @@ export default function Home() {
                     <div className="flex items-center justify-center gap-6 mt-16 text-sm font-medium text-muted-foreground">
                         <div className="flex items-center gap-2">
                             <ShieldCheck className="w-5 h-5 text-green-500" />
-                            <span>100% Verified Astrologers</span>
+                            <span>{t('home.securePrivate')}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                            <span>4.9/5 User Rating</span>
+                            <span>{t('home.expertAstrologers')}</span>
                         </div>
                     </div>
                 </div>
@@ -66,8 +69,8 @@ export default function Home() {
             <section className="py-24 bg-muted/30">
                 <div className="container px-4 mx-auto md:px-8">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold md:text-4xl text-foreground">Why Choose AstroCall?</h2>
-                        <p className="mt-4 text-muted-foreground text-lg">Experience consultations like never before with our cutting-edge platform.</p>
+                        <h2 className="text-3xl font-bold md:text-4xl text-foreground">{t('home.whyChoose')}</h2>
+                        <p className="mt-4 text-muted-foreground text-lg">{t('home.subtitle')}</p>
                     </div>
                     <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
                         <Card className="border-none shadow-md bg-background/60 backdrop-blur aspect-auto">
@@ -75,9 +78,9 @@ export default function Home() {
                                 <div className="flex items-center justify-center w-12 h-12 mb-4 rounded-xl bg-primary/10 text-primary">
                                     <Video className="w-6 h-6" />
                                 </div>
-                                <CardTitle>Seamless Video</CardTitle>
+                                <CardTitle>{t('home.liveConsultation')}</CardTitle>
                                 <CardDescription className="text-base mt-2">
-                                    Crystal clear face-to-face sessions that create a deeply personal and engaging consultation experience.
+                                    {t('home.liveDesc')}
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -85,11 +88,11 @@ export default function Home() {
                         <Card className="border-none shadow-md bg-background/60 backdrop-blur aspect-auto">
                             <CardHeader>
                                 <div className="flex items-center justify-center w-12 h-12 mb-4 rounded-xl bg-primary/10 text-primary">
-                                    <Phone className="w-6 h-6" />
+                                    <ShieldCheck className="w-6 h-6" />
                                 </div>
-                                <CardTitle>Instant Voice Calls</CardTitle>
+                                <CardTitle>{t('home.securePrivate')}</CardTitle>
                                 <CardDescription className="text-base mt-2">
-                                    Need quick advice? Connect immediately over pristine voice channels, anytime and anywhere.
+                                    {t('home.secureDesc')}
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -99,9 +102,9 @@ export default function Home() {
                                 <div className="flex items-center justify-center w-12 h-12 mb-4 rounded-xl bg-primary/10 text-primary">
                                     <CalendarCheck className="w-6 h-6" />
                                 </div>
-                                <CardTitle>Easy Scheduling</CardTitle>
+                                <CardTitle>{t('home.affordable')}</CardTitle>
                                 <CardDescription className="text-base mt-2">
-                                    Book sessions in advance or jump into a live queue—getting spiritual guidance has never been simpler.
+                                    {t('home.affordableDesc')}
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -112,7 +115,7 @@ export default function Home() {
             {/* Testimonials / Social Proof */}
             <section className="py-24">
                 <div className="container px-4 mx-auto md:px-8 text-center">
-                    <h2 className="text-3xl font-bold md:text-4xl text-foreground mb-12">Trusted by Thousands</h2>
+                    <h2 className="text-3xl font-bold md:text-4xl text-foreground mb-12">{t('home.expertAstrologers')}</h2>
                     <div className="flex flex-wrap justify-center gap-8">
                         <Card className="w-full max-w-sm text-left border-muted">
                             <CardContent className="pt-6">
@@ -121,15 +124,15 @@ export default function Home() {
                                         <Star key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                                     ))}
                                 </div>
-                                <p className="mb-6 text-muted-foreground italic">"The video call quality was incredible. It felt like the astrologer was right there in the room with me. Best reading I've ever had."</p>
+                                <p className="mb-6 text-muted-foreground italic">{t('home.expertDesc')}</p>
                                 <div className="flex items-center gap-4">
                                     <Avatar>
                                         <AvatarImage src="https://i.pravatar.cc/150?img=47" />
                                         <AvatarFallback>SJ</AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="font-semibold text-sm">Sarah Jenkins</p>
-                                        <p className="text-xs text-muted-foreground">Premium User</p>
+                                        <p className="font-semibold text-sm">Priya Sharma</p>
+                                        <p className="text-xs text-muted-foreground">{t('common.user')}</p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -142,15 +145,15 @@ export default function Home() {
                                         <Star key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                                     ))}
                                 </div>
-                                <p className="mb-6 text-muted-foreground italic">"I love how quick and easy it is to find someone online. The voice call connected instantly and the advice was spot on!"</p>
+                                <p className="mb-6 text-muted-foreground italic">{t('home.liveDesc')}</p>
                                 <div className="flex items-center gap-4">
                                     <Avatar>
                                         <AvatarImage src="https://i.pravatar.cc/150?img=11" />
                                         <AvatarFallback>MK</AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="font-semibold text-sm">Michael K.</p>
-                                        <p className="text-xs text-muted-foreground">Regular Caller</p>
+                                        <p className="font-semibold text-sm">Ravi Kumar</p>
+                                        <p className="text-xs text-muted-foreground">{t('common.user')}</p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -162,10 +165,10 @@ export default function Home() {
             {/* CTA Section */}
             <section className="py-20 bg-primary/5 border-t border-primary/10">
                 <div className="container px-4 mx-auto text-center md:px-8">
-                    <h2 className="text-3xl font-bold md:text-4xl text-foreground mb-6">Ready to Discover Your Path?</h2>
-                    <p className="max-w-xl mx-auto mb-8 text-lg text-muted-foreground">Join AstroCall today and get your first 5 minutes free with any premium astrologer.</p>
+                    <h2 className="text-3xl font-bold md:text-4xl text-foreground mb-6">{t('home.title')}</h2>
+                    <p className="max-w-xl mx-auto mb-8 text-lg text-muted-foreground">{t('home.subtitle')}</p>
                     <Button asChild size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/20">
-                        <Link to="/login">Create Free Account</Link>
+                        <Link to="/login">{t('home.getStarted')}</Link>
                     </Button>
                 </div>
             </section>
