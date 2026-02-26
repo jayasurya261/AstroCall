@@ -19,7 +19,7 @@
 ## ✨ Features
 
 ### 👤 For Users
-- **Browse Astrologers** — Explore a directory of astrologers with ratings, specializations, languages, and real-time availability status
+- **Explore Astrologers** — Discover astrologers with ratings, specializations, languages, and real-time availability status
 - **Video & Voice Calls** — Book and join real-time consultations powered by LiveKit
 - **Live Chat** — Real-time messaging with astrologers via Firestore
 - **Birth Chart (Kundli)** — Enter birth details once → auto-generates a personalized North Indian style Kundli chart with 9 planetary positions
@@ -41,7 +41,7 @@
 - **Multi-Language Support (i18n)** — Full app translated in **English**, **Hindi**, **Tamil**, and **Telugu** with a language switcher in the navbar
 - **Dark Mode** — System-aware theme toggle (Light / Dark / System)
 - **Responsive Design** — Fully responsive across mobile, tablet, and desktop
-- **Google Authentication** — Secure login with Google via Firebase Auth
+- **Google-Only Authentication** — Streamlined sign-in with Google OAuth via Firebase Auth (no email/password)
 - **Role-Based Access** — Separate dashboards for Users, Astrologers, and Admins
 - **Admin Dashboard** — Manage users, astrologers, and platform settings
 - **Real-Time Data** — Firestore-powered real-time updates across the platform
@@ -138,7 +138,7 @@ npm run preview
 src/
 ├── assets/                  # Static assets
 ├── components/
-│   ├── astrology/           # BirthChart, DailyHoroscope components
+│   ├── astrology/           # BirthChart, DailyHoroscope, DailyPanchang components
 │   ├── layout/              # Navbar, Footer
 │   ├── ui/                  # shadcn/ui components (Button, Card, Badge, etc.)
 │   ├── ThemeProvider.jsx     # Dark mode provider
@@ -148,6 +148,7 @@ src/
 ├── lib/
 │   ├── astrology.js          # Zodiac calculator, planetary positions, horoscope engine
 │   ├── firebase.js           # Firebase config and initialization
+│   ├── livekit.js            # LiveKit token generation and call helpers
 │   └── utils.js              # Utility functions
 ├── locales/
 │   ├── en.json               # English translations
@@ -156,7 +157,7 @@ src/
 │   └── te.json               # Telugu translations
 ├── pages/
 │   ├── Home.jsx              # Landing page
-│   ├── Login.jsx             # Authentication page
+│   ├── Login.jsx             # Google OAuth sign-in page
 │   ├── Astrologers.jsx       # Browse astrologers directory
 │   ├── AstrologerProfile.jsx # Individual astrologer profile
 │   ├── AstrologerDashboard.jsx # Astrologer management dashboard

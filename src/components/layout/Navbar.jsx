@@ -108,14 +108,9 @@ const Navbar = () => {
                 <div className="flex items-center gap-2">
                     <ThemeToggle />
                     {!currentUser ? (
-                        <>
-                            <Button asChild variant="outline" className="hidden sm:flex">
-                                <Link to="/login">{t('nav.login')}</Link>
-                            </Button>
-                            <Button asChild>
-                                <Link to="/login">{t('nav.login')}</Link>
-                            </Button>
-                        </>
+                        <Button asChild>
+                            <Link to="/login">{t('nav.login')}</Link>
+                        </Button>
                     ) : (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
