@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Video, Phone, Star, CheckCircle2, Users, Loader2, MessageSquare, ChevronDown, ChevronUp, Heart } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getOrCreateChat } from '@/pages/Chat';
 import { useTranslation } from 'react-i18next';
@@ -161,7 +161,6 @@ export default function Astrologers() {
                 </div>
             ) : astrologers.length === 0 ? (
                 <div className="text-center py-20 bg-muted/30 rounded-lg border border-dashed">
-                    <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
                     <h3 className="text-lg font-medium text-foreground">No astrologers available yet</h3>
                     <p className="text-muted-foreground mt-1 max-w-md mx-auto">
                         Astrologers will appear here once they register and are verified on the platform.
@@ -180,14 +179,13 @@ export default function Astrologers() {
                                         <AvatarImage src={astro.photoURL || `https://i.pravatar.cc/150?u=${astro.id}`} />
                                         <AvatarFallback>{(astro.name || 'AS').substring(0, 2).toUpperCase()}</AvatarFallback>
                                     </Avatar>
-                                    <span className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-background ${astro.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
                                 </Link>
                                 <div className="flex flex-col flex-1 pl-2">
                                     <div className="flex items-center gap-1.5 mb-1">
                                         <Link to={`/astrologer/${astro.id}`} className="font-bold text-lg leading-none hover:text-primary transition-colors">
                                             {astro.name || 'Astrologer'}
                                         </Link>
-                                        <CheckCircle2 className="w-4 h-4 text-primary fill-primary/20" />
+                                        {astro.verified && <span className="text-xs font-bold uppercase border px-1.5 py-0.5 rounded-sm">Verified</span>}
                                     </div>
                                     {/* Heart button - absolute top right */}
                                     <button
@@ -216,17 +214,18 @@ export default function Astrologers() {
                                             }
                                         }}
                                     >
-                                        <Heart className={`w-5 h-5 transition-colors ${favoriteIds.has(astro.id) ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground hover:text-rose-400'}`} />
+                                        <span className="text-xs font-bold uppercase transition-colors text-muted-foreground hover:text-foreground">
+                                            {favoriteIds.has(astro.id) ? 'Unfavorite' : 'Favorite'}
+                                        </span>
                                     </button>
-                                    <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 mb-2">
-                                        <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                                        <span>{astro.rating || t('common.new')}</span>
+                                    <div className="flex items-center gap-1 text-sm font-bold text-foreground mb-2">
+                                        <span>Rating: {astro.rating || t('common.new')}</span>
                                         <span className="text-muted-foreground font-normal ml-1">
                                             ({astro.reviews || 0} {t('profile.reviews')})
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <p className="text-sm font-semibold text-primary">
+                                        <p className="text-sm font-semibold text-foreground">
                                             ${astro.hourlyRate || 30}/hr
                                         </p>
                                         <Badge variant={astro.isOnline ? "default" : "secondary"} className="text-xs">
@@ -241,7 +240,7 @@ export default function Astrologers() {
                                 </p>
                                 <div className="flex flex-wrap gap-2">
                                     {astro.specializations?.slice(0, 3).map(spec => (
-                                        <Badge key={spec} className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 text-xs py-0">
+                                        <Badge key={spec} className="bg-muted text-foreground hover:bg-muted/80 text-xs py-0">
                                             {spec}
                                         </Badge>
                                     ))}
@@ -261,25 +260,19 @@ export default function Astrologers() {
                                 <div className="px-6 pb-2">
                                     <button
                                         onClick={() => toggleReviews(astro.id)}
-                                        className="flex items-center gap-1.5 text-xs font-medium text-yellow-700 hover:text-yellow-800 transition-colors w-full justify-center py-1.5 rounded-md hover:bg-yellow-50"
+                                        className="flex items-center gap-1.5 text-xs font-bold text-foreground hover:text-muted-foreground transition-colors w-full justify-center py-1.5 rounded-md hover:bg-muted"
                                     >
-                                        <MessageSquare className="w-3.5 h-3.5" />
                                         {expandedReviews === astro.id ? t('astrologers.hideReviews') : t('astrologers.viewReviews', { count: astro.reviews })}
-                                        {expandedReviews === astro.id ? (
-                                            <ChevronUp className="w-3.5 h-3.5" />
-                                        ) : (
-                                            <ChevronDown className="w-3.5 h-3.5" />
-                                        )}
                                     </button>
                                 </div>
                             )}
 
                             {/* Expanded Reviews */}
                             {expandedReviews === astro.id && (
-                                <div className="border-t bg-gradient-to-b from-yellow-50/40 to-transparent px-6 py-4 max-h-60 overflow-y-auto">
+                                <div className="border-t bg-gradient-to-b from-muted to-transparent px-6 py-4 max-h-60 overflow-y-auto">
                                     {loadingReviews === astro.id ? (
                                         <div className="flex items-center justify-center py-4">
-                                            <Loader2 className="w-5 h-5 animate-spin text-yellow-600" />
+                                            <Loader2 className="w-5 h-5 animate-spin text-foreground" />
                                         </div>
                                     ) : (astroReviews[astro.id] || []).length === 0 ? (
                                         <p className="text-xs text-muted-foreground text-center py-3">{t('astrologers.noReviews')}</p>
@@ -298,13 +291,8 @@ export default function Astrologers() {
                                                                 {review.userEmail?.split('@')[0] || 'User'}
                                                             </span>
                                                         </div>
-                                                        <div className="flex items-center gap-0.5">
-                                                            {[1, 2, 3, 4, 5].map(s => (
-                                                                <Star
-                                                                    key={s}
-                                                                    className={`w-3 h-3 ${s <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`}
-                                                                />
-                                                            ))}
+                                                        <div className="flex items-center gap-0.5 font-bold text-xs text-foreground">
+                                                            {review.rating}/5
                                                         </div>
                                                     </div>
                                                     {review.comment && (
@@ -317,6 +305,36 @@ export default function Astrologers() {
                                                             ? new Date(review.createdAt.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                                                             : 'Recent'}
                                                     </p>
+                                                    {currentUser && (
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    await addDoc(collection(db, 'reports'), {
+                                                                        type: 'review',
+                                                                        contentId: review.id,
+                                                                        content: review.comment || '',
+                                                                        rating: review.rating,
+                                                                        reportedUserEmail: review.userEmail,
+                                                                        astroId: astro.id,
+                                                                        reportedBy: currentUser.uid,
+                                                                        reportedByEmail: currentUser.email,
+                                                                        status: 'pending',
+                                                                        createdAt: serverTimestamp(),
+                                                                    });
+                                                                    toast('Review reported', {
+                                                                        description: 'Admin will review this content.',
+                                                                        style: { background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' },
+                                                                    });
+                                                                } catch (err) {
+                                                                    console.error('Error reporting:', err);
+                                                                }
+                                                            }}
+                                                            className="flex items-center gap-1 text-[10px] uppercase font-bold text-muted-foreground hover:text-foreground transition-colors mt-1"
+                                                            title="Report this review"
+                                                        >
+                                                            Report
+                                                        </button>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -328,28 +346,24 @@ export default function Astrologers() {
                                 {astro.isOnline ? (
                                     <>
                                         <Button
-                                            className="flex-1 gap-2 shadow-md shadow-primary/20"
+                                            className="flex-1 gap-2 shadow-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90"
                                             disabled={!!bookingId}
                                             onClick={() => handleBook(astro.id, 'video')}
                                         >
                                             {bookingId === astro.id + '-video' ? (
                                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                            ) : (
-                                                <Video className="w-4 h-4" />
-                                            )}
+                                            ) : null}
                                             {t('astrologers.videoCall')}
                                         </Button>
                                         <Button
                                             variant="outline"
-                                            className="flex-1 gap-2 bg-muted/10"
+                                            className="flex-1 gap-2 bg-muted font-bold text-foreground border-border hover:bg-muted/80"
                                             disabled={!!bookingId}
                                             onClick={() => handleBook(astro.id, 'voice')}
                                         >
                                             {bookingId === astro.id + '-voice' ? (
                                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                            ) : (
-                                                <Phone className="w-4 h-4" />
-                                            )}
+                                            ) : null}
                                             {t('astrologers.voiceCall')}
                                         </Button>
                                     </>
@@ -360,8 +374,7 @@ export default function Astrologers() {
                                 )}
                                 <Button
                                     variant="outline"
-                                    size="icon"
-                                    className="shrink-0"
+                                    className="shrink-0 font-bold border-border bg-background text-foreground hover:bg-muted"
                                     title={t('astrologers.sendMessage')}
                                     onClick={async () => {
                                         if (!currentUser) { navigate('/login'); return; }
@@ -374,7 +387,7 @@ export default function Astrologers() {
                                         }
                                     }}
                                 >
-                                    <MessageSquare className="w-4 h-4" />
+                                    Message
                                 </Button>
                             </CardFooter>
                         </Card>

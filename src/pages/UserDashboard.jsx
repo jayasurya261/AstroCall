@@ -7,11 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Clock, PhoneCall, Calendar, Video, Phone, Star, MessageSquare, Loader2, CheckCircle2, MessageCircle, Heart } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import BirthChart from '@/components/astrology/BirthChart';
 import DailyHoroscope from '@/components/astrology/DailyHoroscope';
+import DailyPanchang from '@/components/astrology/DailyPanchang';
 
 export default function UserDashboard() {
     const { currentUser } = useAuth();
@@ -227,19 +228,12 @@ export default function UserDashboard() {
     }
 
     const getStatusColor = (status) => {
-        switch (status) {
-            case 'active': return 'bg-green-100 text-green-800 border-green-200';
-            case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'completed': return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-            case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
-            default: return 'bg-gray-100 text-gray-800 border-gray-200';
-        }
+        return 'bg-muted text-foreground border-border';
     };
 
     return (
-        <div className="container py-10 mx-auto px-4 md:px-8">
-            <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="container py-6 md:py-10 mx-auto px-4 md:px-8 space-y-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('nav.mySessions')}</h1>
                     <p className="text-muted-foreground mt-2">{t('dashboard.todaySessions')}</p>
@@ -251,7 +245,7 @@ export default function UserDashboard() {
 
             {/* Birth Chart & Daily Horoscope */}
             {!birthLoading && (
-                <div className="grid gap-6 mb-8">
+                <div className="grid gap-6">
                     <div className="grid lg:grid-cols-2 gap-6">
                         <BirthChart
                             birthDetails={birthDetails}
@@ -260,6 +254,7 @@ export default function UserDashboard() {
                         />
                         {birthDetails && <DailyHoroscope birthDetails={birthDetails} />}
                     </div>
+                    <DailyPanchang />
                 </div>
             )}
 
@@ -273,7 +268,6 @@ export default function UserDashboard() {
                 </div>
             ) : sessions.length === 0 ? (
                 <div className="text-center py-20 bg-muted/30 rounded-lg border border-dashed">
-                    <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
                     <h3 className="text-lg font-medium text-foreground">{t('dashboard.noSessions')}</h3>
                     <p className="text-muted-foreground mt-1">{t('dashboard.noSessions')}</p>
                     <Button asChild className="mt-4">
@@ -292,16 +286,11 @@ export default function UserDashboard() {
                                                 {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
                                             </Badge>
                                             {/* Call type badge */}
-                                            <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-                                                {session.callType === 'video' ? (
-                                                    <>{<Video className="w-3 h-3" />} {t('astrologers.videoCall')}</>
-                                                ) : (
-                                                    <>{<Phone className="w-3 h-3" />} {t('astrologers.voiceCall')}</>
-                                                )}
+                                            <Badge variant="secondary" className="text-xs font-semibold">
+                                                {session.callType === 'video' ? t('astrologers.videoCall') : t('astrologers.voiceCall')}
                                             </Badge>
                                         </div>
-                                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                            <Clock className="w-4 h-4" />
+                                        <span className="text-sm text-muted-foreground font-medium">
                                             {session.startedAt ? new Date(session.startedAt.toDate()).toLocaleDateString() : 'Pending Date'}
                                         </span>
                                     </div>
@@ -319,11 +308,10 @@ export default function UserDashboard() {
                                 {session.status === 'pending' && (
                                     <div className="bg-yellow-50/50 p-6 sm:border-l flex items-center justify-center">
                                         <div className="text-center space-y-1">
-                                            <div className="flex items-center gap-2 text-yellow-700 font-medium">
-                                                <Clock className="w-4 h-4 animate-pulse" />
+                                            <div className="font-bold text-foreground tracking-wide uppercase text-sm">
                                                 Waiting for acceptance
                                             </div>
-                                            <p className="text-xs text-yellow-600">{t('dashboard.pendingCalls')}</p>
+                                            <p className="text-xs text-muted-foreground">{t('dashboard.pendingCalls')}</p>
                                         </div>
                                     </div>
                                 )}
@@ -333,21 +321,17 @@ export default function UserDashboard() {
                                     <div className="bg-primary/5 p-6 sm:border-l flex items-center justify-center">
                                         <button
                                             onClick={() => navigate(`/call-room?room=${session.roomName}&type=${session.callType}`)}
-                                            className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-md font-medium hover:bg-primary/90 transition-colors"
+                                            className="bg-primary text-primary-foreground px-6 py-2.5 rounded-md font-bold hover:bg-primary/90 transition-colors uppercase tracking-wide text-sm"
                                         >
-                                            {session.callType === 'video' ? (
-                                                <>{<Video className="w-4 h-4" />} {t('dashboard.joinCall')}</>
-                                            ) : (
-                                                <>{<PhoneCall className="w-4 h-4" />} {t('dashboard.joinCall')}</>
-                                            )}
+                                            {t('dashboard.joinCall')}
                                         </button>
                                     </div>
                                 )}
 
                                 {/* REJECTED → Label */}
                                 {session.status === 'rejected' && (
-                                    <div className="bg-red-50/50 p-6 sm:border-l flex items-center justify-center">
-                                        <p className="text-red-600 font-medium text-sm">Request Declined</p>
+                                    <div className="bg-muted p-6 sm:border-l flex items-center justify-center">
+                                        <p className="text-foreground font-medium text-sm">Request Declined</p>
                                     </div>
                                 )}
 
@@ -355,22 +339,20 @@ export default function UserDashboard() {
                                 {session.status === 'completed' && (
                                     <div className="bg-blue-50/50 p-6 sm:border-l flex items-center justify-center">
                                         {reviewedSessionIds.has(session.id) ? (
-                                            <div className="flex items-center gap-2 text-green-700 font-medium text-sm">
-                                                <CheckCircle2 className="w-4 h-4" />
-                                                Reviewed ✓
+                                            <div className="text-foreground font-bold uppercase tracking-wide text-sm">
+                                                Reviewed
                                             </div>
                                         ) : (
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="gap-2 border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                                                className="border-border text-foreground hover:bg-muted font-bold"
                                                 onClick={() => {
                                                     setReviewFormOpen(reviewFormOpen === session.id ? null : session.id);
                                                     setReviewRating(0);
                                                     setReviewComment('');
                                                 }}
                                             >
-                                                <Star className="w-4 h-4" />
                                                 {t('dashboard.leaveReview')}
                                             </Button>
                                         )}
@@ -382,8 +364,7 @@ export default function UserDashboard() {
                             {reviewFormOpen === session.id && !reviewedSessionIds.has(session.id) && (
                                 <div className="border-t bg-gradient-to-r from-yellow-50/50 to-orange-50/30 p-6">
                                     <div className="max-w-lg">
-                                        <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                                            <MessageSquare className="w-4 h-4 text-yellow-600" />
+                                        <h4 className="font-bold text-foreground mb-3">
                                             Rate your session with {session.astroName}
                                         </h4>
 
@@ -393,21 +374,19 @@ export default function UserDashboard() {
                                                 <button
                                                     key={star}
                                                     type="button"
-                                                    className="p-0.5 transition-transform hover:scale-110"
+                                                    className={`w-8 h-8 rounded-full text-sm font-bold transition-colors ${star <= (reviewHover || reviewRating)
+                                                        ? 'bg-primary text-primary-foreground border-primary'
+                                                        : 'bg-muted text-muted-foreground border-border'
+                                                        } border`}
                                                     onMouseEnter={() => setReviewHover(star)}
                                                     onMouseLeave={() => setReviewHover(0)}
                                                     onClick={() => setReviewRating(star)}
                                                 >
-                                                    <Star
-                                                        className={`w-7 h-7 transition-colors ${star <= (reviewHover || reviewRating)
-                                                            ? 'fill-yellow-400 text-yellow-400'
-                                                            : 'text-gray-300'
-                                                            }`}
-                                                    />
+                                                    {star}
                                                 </button>
                                             ))}
                                             {reviewRating > 0 && (
-                                                <span className="ml-2 text-sm font-medium text-yellow-700">
+                                                <span className="ml-2 text-sm font-medium text-foreground">
                                                     {reviewRating}/5
                                                 </span>
                                             )}
@@ -427,13 +406,11 @@ export default function UserDashboard() {
                                                 size="sm"
                                                 disabled={submittingReview || reviewRating === 0}
                                                 onClick={() => handleSubmitReview(session)}
-                                                className="gap-2 bg-yellow-600 hover:bg-yellow-700 text-white shadow-sm"
+                                                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm font-bold"
                                             >
                                                 {submittingReview ? (
                                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                                ) : (
-                                                    <Star className="w-4 h-4" />
-                                                )}
+                                                ) : null}
                                                 Submit Review
                                             </Button>
                                             <Button
@@ -457,9 +434,8 @@ export default function UserDashboard() {
             )}
 
             {/* My Favorites */}
-            <div className="mt-10">
-                <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1 flex items-center gap-2">
-                    <Heart className="w-6 h-6 text-rose-500" />
+            <div>
+                <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1">
                     My Favorites
                     {favorites.length > 0 && (
                         <Badge variant="secondary" className="text-xs ml-1">{favorites.length}</Badge>
@@ -468,8 +444,7 @@ export default function UserDashboard() {
                 <p className="text-muted-foreground mb-6 text-sm">Your saved astrologers for quick access.</p>
                 {favorites.length === 0 ? (
                     <div className="text-center py-10 bg-muted/30 rounded-lg border border-dashed">
-                        <Heart className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-40" />
-                        <h3 className="text-base font-medium text-foreground">No favorites yet</h3>
+                        <h3 className="text-base font-bold text-foreground">No favorites yet</h3>
                         <p className="text-sm text-muted-foreground mt-1">Browse astrologers and tap the heart to save them here!</p>
                         <Button asChild variant="outline" className="mt-4">
                             <Link to="/astrologers">Browse Astrologers</Link>
@@ -478,7 +453,7 @@ export default function UserDashboard() {
                 ) : (
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {favorites.map(fav => (
-                            <Card key={fav.favDocId} className="group hover:shadow-md transition-all hover:border-rose-200 dark:hover:border-rose-500/30">
+                            <Card key={fav.favDocId} className="group hover:shadow-md transition-all hover:border-border">
                                 <CardContent className="p-4">
                                     <div className="flex items-start gap-3">
                                         <Link to={`/astrologer/${fav.astroId}`}>
@@ -506,22 +481,20 @@ export default function UserDashboard() {
                                                             setTogglingFav(null);
                                                         }
                                                     }}
-                                                    disabled={togglingFav === fav.favDocId}
-                                                    className="text-rose-500 hover:text-rose-600 transition-colors p-1"
                                                     title="Remove from favorites"
+                                                    className="text-foreground hover:text-muted-foreground transition-colors p-1"
                                                 >
-                                                    <Heart className="w-4 h-4 fill-rose-500" />
+                                                    Unfavorite
                                                 </button>
                                             </div>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className="flex items-center gap-0.5 text-xs text-yellow-700">
-                                                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                                    {fav.rating || 'New'}
+                                                <span className="text-xs font-bold text-foreground">
+                                                    Rating: {fav.rating || 'New'}
                                                 </span>
                                                 <Badge variant={fav.isOnline ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
                                                     {fav.isOnline ? 'Online' : 'Offline'}
                                                 </Badge>
-                                                <span className="text-xs text-primary font-semibold">${fav.hourlyRate || 30}/hr</span>
+                                                <span className="text-xs text-foreground font-semibold">${fav.hourlyRate || 30}/hr</span>
                                             </div>
                                         </div>
                                     </div>
@@ -538,18 +511,15 @@ export default function UserDashboard() {
             </div>
 
             {/* Messages card */}
-            <Card className="mt-8 overflow-hidden hover:shadow-md transition-shadow border-blue-200/50 bg-gradient-to-r from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10 dark:border-blue-500/20">
-                <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
+            <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow border-blue-200/50 bg-gradient-to-r from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10 dark:border-blue-500/20">
+                <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/20 border border-blue-200 dark:border-blue-500/30 flex items-center justify-center">
-                                <MessageCircle className="w-6 h-6 text-blue-600" />
-                            </div>
                             <div>
-                                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                                <h3 className="font-bold text-foreground flex items-center gap-2 text-lg">
                                     My Messages
                                     {myChats.length > 0 && (
-                                        <span className="text-sm font-normal text-blue-700 dark:text-blue-400">
+                                        <span className="text-sm font-normal text-muted-foreground">
                                             {myChats.length} conversation{myChats.length !== 1 ? 's' : ''}
                                         </span>
                                     )}
@@ -557,9 +527,8 @@ export default function UserDashboard() {
                                 <p className="text-sm text-muted-foreground">Chat with your astrologers</p>
                             </div>
                         </div>
-                        <Button asChild variant="outline" className="gap-2 border-blue-300 dark:border-blue-500/30 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10">
+                        <Button asChild variant="outline" className="w-full sm:w-auto font-bold border-border text-foreground hover:bg-muted">
                             <Link to="/chat">
-                                <MessageCircle className="w-4 h-4" />
                                 Open Chat
                             </Link>
                         </Button>

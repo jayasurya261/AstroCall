@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
     Star, Video, Phone, CheckCircle2, ArrowLeft, Loader2,
-    Globe, Clock, MessageSquare, TrendingUp, UserX, Heart
+    Globe, Clock, MessageSquare, TrendingUp, UserX, Heart, Flag
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getOrCreateChat } from '@/pages/Chat';
@@ -187,7 +187,7 @@ export default function AstrologerProfile() {
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                                 <h1 className="text-2xl font-bold text-foreground">{astro.name || 'Astrologer'}</h1>
-                                <CheckCircle2 className="w-5 h-5 text-primary fill-primary/20" />
+                                {astro.verified && <CheckCircle2 className="w-5 h-5 text-primary fill-primary/20" title="Verified Astrologer" />}
                                 <Badge variant={astro.isOnline ? "default" : "secondary"} className="ml-2">
                                     {astro.isOnline ? "Online" : "Offline"}
                                 </Badge>
@@ -449,6 +449,39 @@ export default function AstrologerProfile() {
                                         <p className="mt-3 text-sm text-muted-foreground leading-relaxed pl-[52px]">
                                             "{review.comment}"
                                         </p>
+                                    )}
+                                    {currentUser && (
+                                        <div className="flex justify-end mt-2">
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        await addDoc(collection(db, 'reports'), {
+                                                            type: 'review',
+                                                            contentId: review.id,
+                                                            content: review.comment || '',
+                                                            rating: review.rating,
+                                                            reportedUserEmail: review.userEmail,
+                                                            astroId: id,
+                                                            reportedBy: currentUser.uid,
+                                                            reportedByEmail: currentUser.email,
+                                                            status: 'pending',
+                                                            createdAt: serverTimestamp(),
+                                                        });
+                                                        toast('Review reported', {
+                                                            description: 'Admin will review this content.',
+                                                            style: { background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' },
+                                                        });
+                                                    } catch (err) {
+                                                        console.error('Error reporting:', err);
+                                                        toast('Failed to report', { style: { background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' } });
+                                                    }
+                                                }}
+                                                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-red-500 transition-colors px-2 py-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10"
+                                                title="Report this review"
+                                            >
+                                                <Flag className="w-3 h-3" /> Report
+                                            </button>
+                                        </div>
                                     )}
                                 </CardContent>
                             </Card>

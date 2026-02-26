@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, Edit3, Save, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
@@ -163,7 +163,7 @@ export default function BirthChart({ birthDetails, userId, onSave }) {
                 birthDetails: details,
             });
 
-            toast('Birth details saved! ✨', {
+            toast('Birth details saved!', {
                 style: { background: '#dcfce7', color: '#166534', border: '1px solid #86efac' },
             });
 
@@ -184,8 +184,7 @@ export default function BirthChart({ birthDetails, userId, onSave }) {
         return (
             <Card className="overflow-hidden border-primary/20 shadow-sm">
                 <CardHeader className="pb-3 bg-gradient-to-r from-violet-50/80 to-indigo-50/50 dark:from-violet-500/10 dark:to-indigo-500/5">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                        <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                    <CardTitle className="text-lg font-bold text-foreground">
                         Birth Chart (Kundli)
                     </CardTitle>
                 </CardHeader>
@@ -232,7 +231,7 @@ export default function BirthChart({ birthDetails, userId, onSave }) {
                     </div>
                     <div className="flex gap-2 mt-5">
                         <Button onClick={handleSave} disabled={saving} className="gap-2">
-                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                             Generate Chart
                         </Button>
                         {birthDetails && (
@@ -242,7 +241,7 @@ export default function BirthChart({ birthDetails, userId, onSave }) {
                                 setTimeOfBirth(birthDetails.timeOfBirth);
                                 setPlaceOfBirth(birthDetails.placeOfBirth);
                             }}>
-                                <X className="w-4 h-4 mr-1" /> Cancel
+                                Cancel
                             </Button>
                         )}
                     </div>
@@ -256,17 +255,21 @@ export default function BirthChart({ birthDetails, userId, onSave }) {
     const positions = calculatePlanetaryPositions(birthDetails.dateOfBirth, birthDetails.timeOfBirth);
     const elementInfo = ELEMENT_INFO[zodiac.element];
 
+    // Get element color
+    const getElementColor = (element) => {
+        return 'text-foreground';
+    };
+
     return (
         <Card className="overflow-hidden border-primary/20 shadow-sm">
             <CardHeader className="pb-3 bg-gradient-to-r from-violet-50/80 to-indigo-50/50 dark:from-violet-500/10 dark:to-indigo-500/5">
                 <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                        <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                    <CardTitle className="text-lg font-bold text-foreground">
                         Birth Chart (Kundli)
                     </CardTitle>
-                    <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-8 text-muted-foreground"
+                    <Button variant="ghost" size="sm" className="text-xs h-8 text-muted-foreground font-semibold"
                         onClick={() => setEditing(true)}>
-                        <Edit3 className="w-3.5 h-3.5" /> Edit
+                        Edit
                     </Button>
                 </div>
             </CardHeader>
@@ -276,14 +279,13 @@ export default function BirthChart({ birthDetails, userId, onSave }) {
                     <div className="space-y-4">
                         {/* Zodiac Sign Card */}
                         <div className="flex items-center gap-4 p-4 rounded-xl border bg-gradient-to-br from-background to-muted/30">
-                            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-sm"
-                                style={{ backgroundColor: zodiac.color + '18', border: `1px solid ${zodiac.color}30` }}>
-                                {zodiac.emoji}
+                            <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl shadow-sm border border-border bg-muted/50 text-foreground">
+                                {zodiac.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-foreground capitalize">{zodiac.name}</h3>
                                 <p className="text-sm text-muted-foreground">
-                                    {zodiac.symbol} · {elementInfo.emoji} {zodiac.element} Sign
+                                    {zodiac.symbol} · <span className={getElementColor(zodiac.element)}>{zodiac.element}</span> Sign
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-0.5">
                                     Ruler: {zodiac.ruler}
@@ -309,8 +311,8 @@ export default function BirthChart({ birthDetails, userId, onSave }) {
                             </div>
                             <div className="flex justify-between py-1.5 border-b border-dashed">
                                 <span className="text-muted-foreground">Element</span>
-                                <Badge variant="secondary" className="text-xs gap-1">
-                                    {elementInfo.emoji} {zodiac.element}
+                                <Badge variant="secondary" className={`text-xs ${getElementColor(zodiac.element)}`}>
+                                    {zodiac.element}
                                 </Badge>
                             </div>
                             <div className="flex justify-between py-1.5">
@@ -323,7 +325,7 @@ export default function BirthChart({ birthDetails, userId, onSave }) {
 
                         {/* Element traits */}
                         <p className="text-xs text-muted-foreground italic px-1">
-                            {elementInfo.emoji} {zodiac.element} signs are known for being {elementInfo.traits.toLowerCase()}.
+                            <span className={`font-semibold ${getElementColor(zodiac.element)}`}>{zodiac.element}</span> signs are known for being {elementInfo.traits.toLowerCase()}.
                         </p>
                     </div>
 

@@ -4,18 +4,18 @@
 
 // --- Zodiac Signs ---
 export const ZODIAC_SIGNS = [
-    { name: 'aries', symbol: '♈', element: 'Fire', ruler: 'Mars', startMonth: 3, startDay: 21, endMonth: 4, endDay: 19, emoji: '🐑', color: '#EF4444' },
-    { name: 'taurus', symbol: '♉', element: 'Earth', ruler: 'Venus', startMonth: 4, startDay: 20, endMonth: 5, endDay: 20, emoji: '🐂', color: '#22C55E' },
-    { name: 'gemini', symbol: '♊', element: 'Air', ruler: 'Mercury', startMonth: 5, startDay: 21, endMonth: 6, endDay: 20, emoji: '👯', color: '#F59E0B' },
-    { name: 'cancer', symbol: '♋', element: 'Water', ruler: 'Moon', startMonth: 6, startDay: 21, endMonth: 7, endDay: 22, emoji: '🦀', color: '#6366F1' },
-    { name: 'leo', symbol: '♌', element: 'Fire', ruler: 'Sun', startMonth: 7, startDay: 23, endMonth: 8, endDay: 22, emoji: '🦁', color: '#F97316' },
-    { name: 'virgo', symbol: '♍', element: 'Earth', ruler: 'Mercury', startMonth: 8, startDay: 23, endMonth: 9, endDay: 22, emoji: '👩', color: '#84CC16' },
-    { name: 'libra', symbol: '♎', element: 'Air', ruler: 'Venus', startMonth: 9, startDay: 23, endMonth: 10, endDay: 22, emoji: '⚖️', color: '#EC4899' },
-    { name: 'scorpio', symbol: '♏', element: 'Water', ruler: 'Mars', startMonth: 10, startDay: 23, endMonth: 11, endDay: 21, emoji: '🦂', color: '#DC2626' },
-    { name: 'sagittarius', symbol: '♐', element: 'Fire', ruler: 'Jupiter', startMonth: 11, startDay: 22, endMonth: 12, endDay: 21, emoji: '🏹', color: '#8B5CF6' },
-    { name: 'capricorn', symbol: '♑', element: 'Earth', ruler: 'Saturn', startMonth: 12, startDay: 22, endMonth: 1, endDay: 19, emoji: '🐐', color: '#64748B' },
-    { name: 'aquarius', symbol: '♒', element: 'Air', ruler: 'Saturn', startMonth: 1, startDay: 20, endMonth: 2, endDay: 18, emoji: '🏺', color: '#06B6D4' },
-    { name: 'pisces', symbol: '♓', element: 'Water', ruler: 'Jupiter', startMonth: 2, startDay: 19, endMonth: 3, endDay: 20, emoji: '🐟', color: '#2DD4BF' },
+    { name: 'aries', symbol: '♈', element: 'Fire', ruler: 'Mars', startMonth: 3, startDay: 21, endMonth: 4, endDay: 19, color: '#EF4444' },
+    { name: 'taurus', symbol: '♉', element: 'Earth', ruler: 'Venus', startMonth: 4, startDay: 20, endMonth: 5, endDay: 20, color: '#22C55E' },
+    { name: 'gemini', symbol: '♊', element: 'Air', ruler: 'Mercury', startMonth: 5, startDay: 21, endMonth: 6, endDay: 20, color: '#F59E0B' },
+    { name: 'cancer', symbol: '♋', element: 'Water', ruler: 'Moon', startMonth: 6, startDay: 21, endMonth: 7, endDay: 22, color: '#6366F1' },
+    { name: 'leo', symbol: '♌', element: 'Fire', ruler: 'Sun', startMonth: 7, startDay: 23, endMonth: 8, endDay: 22, color: '#F97316' },
+    { name: 'virgo', symbol: '♍', element: 'Earth', ruler: 'Mercury', startMonth: 8, startDay: 23, endMonth: 9, endDay: 22, color: '#84CC16' },
+    { name: 'libra', symbol: '♎', element: 'Air', ruler: 'Venus', startMonth: 9, startDay: 23, endMonth: 10, endDay: 22, color: '#EC4899' },
+    { name: 'scorpio', symbol: '♏', element: 'Water', ruler: 'Mars', startMonth: 10, startDay: 23, endMonth: 11, endDay: 21, color: '#DC2626' },
+    { name: 'sagittarius', symbol: '♐', element: 'Fire', ruler: 'Jupiter', startMonth: 11, startDay: 22, endMonth: 12, endDay: 21, color: '#8B5CF6' },
+    { name: 'capricorn', symbol: '♑', element: 'Earth', ruler: 'Saturn', startMonth: 12, startDay: 22, endMonth: 1, endDay: 19, color: '#64748B' },
+    { name: 'aquarius', symbol: '♒', element: 'Air', ruler: 'Saturn', startMonth: 1, startDay: 20, endMonth: 2, endDay: 18, color: '#06B6D4' },
+    { name: 'pisces', symbol: '♓', element: 'Water', ruler: 'Jupiter', startMonth: 2, startDay: 19, endMonth: 3, endDay: 20, color: '#2DD4BF' },
 ];
 
 // --- Planets (for Kundli) ---
@@ -199,8 +199,124 @@ export function getDailyHoroscope(zodiacSign, date = new Date()) {
 
 // --- Element descriptions ---
 export const ELEMENT_INFO = {
-    Fire: { emoji: '🔥', traits: 'Passionate, dynamic, adventurous' },
-    Earth: { emoji: '🌍', traits: 'Practical, stable, grounded' },
-    Air: { emoji: '💨', traits: 'Intellectual, social, communicative' },
-    Water: { emoji: '💧', traits: 'Emotional, intuitive, nurturing' },
+    Fire: { traits: 'Passionate, dynamic, adventurous' },
+    Earth: { traits: 'Practical, stable, grounded' },
+    Air: { traits: 'Intellectual, social, communicative' },
+    Water: { traits: 'Emotional, intuitive, nurturing' },
 };
+
+// --- Panchang Data ---
+const TITHIS = [
+    'Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami',
+    'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami',
+    'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima', 'Amavasya'
+];
+
+const NAKSHATRAS = [
+    'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira',
+    'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha',
+    'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati',
+    'Vishakha', 'Anuradha', 'Jyeshtha', 'Mula', 'Purva Ashadha',
+    'Uttara Ashadha', 'Shravana', 'Dhanishtha', 'Shatabhisha',
+    'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'
+];
+
+const YOGAS = [
+    'Vishkambha', 'Priti', 'Ayushman', 'Saubhagya', 'Shobhana',
+    'Atiganda', 'Sukarma', 'Dhriti', 'Shoola', 'Ganda',
+    'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra',
+    'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva',
+    'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma',
+    'Indra', 'Vaidhriti'
+];
+
+const KARANAS = [
+    'Bava', 'Balava', 'Kaulava', 'Taitila', 'Garaja',
+    'Vanija', 'Vishti', 'Shakuni', 'Chatushpada', 'Naga', 'Kimstughna'
+];
+
+const VAARS = ['Ravivaar (Sunday)', 'Somvaar (Monday)', 'Mangalvaar (Tuesday)', 'Budhvaar (Wednesday)', 'Guruvaar (Thursday)', 'Shukravaar (Friday)', 'Shanivaar (Saturday)'];
+
+const PAKSHA_INFO = {
+    shukla: { name: 'Shukla Paksha', desc: 'Waxing Moon — Auspicious for new beginnings' },
+    krishna: { name: 'Krishna Paksha', desc: 'Waning Moon — Ideal for reflection & completion' },
+};
+
+const RAHU_KAAL = [
+    '4:30 PM - 6:00 PM', // Sunday
+    '7:30 AM - 9:00 AM', // Monday
+    '3:00 PM - 4:30 PM', // Tuesday
+    '12:00 PM - 1:30 PM', // Wednesday
+    '1:30 PM - 3:00 PM', // Thursday
+    '10:30 AM - 12:00 PM', // Friday
+    '9:00 AM - 10:30 AM', // Saturday
+];
+
+const SHUBH_MUHURATS = [
+    { name: 'Abhijit Muhurat', time: '11:45 AM - 12:33 PM', desc: 'Best for all auspicious activities' },
+    { name: 'Brahma Muhurat', time: '4:24 AM - 5:12 AM', desc: 'Ideal for meditation & spiritual practices' },
+    { name: 'Amrit Kaal', time: '6:15 AM - 7:45 AM', desc: 'Auspicious for starting new ventures' },
+    { name: 'Vijay Muhurat', time: '2:00 PM - 2:48 PM', desc: 'Best for overcoming obstacles' },
+    { name: 'Godhuli Muhurat', time: '5:45 PM - 6:15 PM', desc: 'Auspicious time around sunset' },
+    { name: 'Nishita Muhurat', time: '11:45 PM - 12:33 AM', desc: 'Sacred midnight hour for worship' },
+];
+
+export function getDailyPanchang(date = new Date()) {
+    const dateStr = date.toISOString().split('T')[0];
+    const seed = simpleHash(dateStr + '-panchang');
+    const dayOfWeek = date.getDay(); // 0=Sun
+
+    // Tithi based on approximate lunar phase (synodic month ≈ 29.53 days)
+    const J2000 = new Date('2000-01-06T18:14:00Z'); // known new moon
+    const daysSinceNewMoon = (date - J2000) / (1000 * 60 * 60 * 24);
+    const lunarDay = ((daysSinceNewMoon % 29.53) + 29.53) % 29.53;
+    const tithiIndex = Math.floor(lunarDay / (29.53 / 30)) % 16;
+    const paksha = lunarDay < 14.76 ? 'shukla' : 'krishna';
+
+    // Nakshatra based on lunar position (sidereal month ≈ 27.32 days)
+    const nakshatraIndex = Math.floor(((daysSinceNewMoon % 27.32) + 27.32) % 27.32 / (27.32 / 27));
+
+    // Yoga & Karana — derived from seed for daily variation
+    const yogaIndex = (seed + Math.floor(daysSinceNewMoon)) % YOGAS.length;
+    const karanaIndex = (seed + Math.floor(lunarDay * 2)) % KARANAS.length;
+
+    // Pick 2-3 shubh muhurats for the day
+    const muhuratsCount = 2 + (seed % 2); // 2 or 3
+    const muhuratIndices = [];
+    for (let i = 0; i < muhuratsCount; i++) {
+        muhuratIndices.push((seed + i * 3) % SHUBH_MUHURATS.length);
+    }
+    const shubhMuhurats = [...new Set(muhuratIndices)].map(i => SHUBH_MUHURATS[i]);
+
+    // Sunrise/Sunset approximate times (vary slightly by seed)
+    const sunriseMin = 5 + (seed % 3); // 5-7 AM range
+    const sunriseSec = 10 + (seed % 50);
+    const sunsetHour = 17 + (seed % 2); // 5-6 PM range
+    const sunsetMin = 20 + (seed % 40);
+
+    // Moonrise approximate
+    const moonriseHour = 6 + Math.floor(lunarDay * 0.8) % 12;
+    const moonriseMin = 10 + (seed % 50);
+
+    // Is today auspicious?
+    const auspiciousYogas = ['Priti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Sukarma', 'Dhriti', 'Harshana', 'Siddhi', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra'];
+    const isAuspicious = auspiciousYogas.includes(YOGAS[yogaIndex]);
+
+    return {
+        date: dateStr,
+        vaar: VAARS[dayOfWeek],
+        tithi: TITHIS[tithiIndex],
+        tithiIndex,
+        paksha: PAKSHA_INFO[paksha],
+        nakshatra: NAKSHATRAS[nakshatraIndex],
+        nakshatraIndex,
+        yoga: YOGAS[yogaIndex],
+        karana: KARANAS[karanaIndex],
+        rahuKaal: RAHU_KAAL[dayOfWeek],
+        shubhMuhurats,
+        sunrise: `${sunriseMin}:${String(sunriseSec).padStart(2, '0')} AM`,
+        sunset: `${sunsetHour - 12}:${String(sunsetMin).padStart(2, '0')} PM`,
+        moonrise: `${moonriseHour > 12 ? moonriseHour - 12 : moonriseHour}:${String(moonriseMin).padStart(2, '0')} ${moonriseHour >= 12 ? 'PM' : 'AM'}`,
+        isAuspicious,
+    };
+}
