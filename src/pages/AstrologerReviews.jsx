@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +13,7 @@ export default function AstrologerReviews() {
     const { currentUser, userRole } = useAuth();
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (!currentUser || userRole !== 'astrologer') return;
@@ -53,10 +55,10 @@ export default function AstrologerReviews() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4 text-destructive">
                 <ShieldCheck className="w-16 h-16 mb-4 opacity-50" />
-                <h1 className="text-3xl font-bold">Access Denied</h1>
-                <p className="mt-2 text-muted-foreground">This page is only available to astrologers.</p>
+                <h1 className="text-3xl font-bold">{t('astrologerReviews.accessDenied')}</h1>
+                <p className="mt-2 text-muted-foreground">{t('astrologerReviews.accessDeniedDesc')}</p>
                 <Button asChild className="mt-6">
-                    <Link to="/">Go Home</Link>
+                    <Link to="/">{t('astrologerReviews.goHome')}</Link>
                 </Button>
             </div>
         );
@@ -69,14 +71,14 @@ export default function AstrologerReviews() {
                 <Button asChild variant="ghost" size="sm" className="mb-4 gap-2 text-muted-foreground">
                     <Link to="/astrologer-dashboard">
                         <ArrowLeft className="w-4 h-4" />
-                        Back to Dashboard
+                        {t('astrologerReviews.backToDashboard')}
                     </Link>
                 </Button>
                 <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
                     <MessageSquare className="w-8 h-8 text-yellow-600" />
-                    My Reviews
+                    {t('astrologerReviews.title')}
                 </h1>
-                <p className="text-muted-foreground mt-2">All feedback received from your clients.</p>
+                <p className="text-muted-foreground mt-2">{t('astrologerReviews.subtitle')}</p>
             </div>
 
             {/* Stats Overview */}
@@ -89,7 +91,7 @@ export default function AstrologerReviews() {
                         </div>
                         <div>
                             <p className="text-4xl font-bold text-yellow-700">{avgRating || '—'}</p>
-                            <p className="text-sm text-yellow-600 font-medium">Average Rating</p>
+                            <p className="text-sm text-yellow-600 font-medium">{t('astrologerReviews.averageRating')}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -102,7 +104,7 @@ export default function AstrologerReviews() {
                         </div>
                         <div>
                             <p className="text-4xl font-bold text-blue-700">{reviews.length}</p>
-                            <p className="text-sm text-blue-600 font-medium">Total Reviews</p>
+                            <p className="text-sm text-blue-600 font-medium">{t('astrologerReviews.totalReviews')}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -112,7 +114,7 @@ export default function AstrologerReviews() {
                     <CardContent className="p-6">
                         <p className="text-sm font-medium text-foreground mb-3 flex items-center gap-1.5">
                             <TrendingUp className="w-4 h-4 text-muted-foreground" />
-                            Rating Breakdown
+                            {t('astrologerReviews.ratingBreakdown')}
                         </p>
                         <div className="space-y-1.5">
                             {ratingCounts.map(({ star, count }) => (
@@ -145,9 +147,9 @@ export default function AstrologerReviews() {
             ) : reviews.length === 0 ? (
                 <div className="text-center py-16 bg-muted/30 rounded-lg border border-dashed">
                     <Star className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-40" />
-                    <h3 className="text-lg font-medium text-foreground">No reviews yet</h3>
+                    <h3 className="text-lg font-medium text-foreground">{t('astrologerReviews.noReviewsYet')}</h3>
                     <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                        When clients rate your sessions, their reviews will appear here.
+                        {t('astrologerReviews.noReviewsDesc')}
                     </p>
                 </div>
             ) : (

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ export default function Login() {
 
     const navigate = useNavigate();
     const { loginWithGoogle, completeGoogleLoginWithRole } = useAuth();
+    const { t } = useTranslation();
 
     // ─── Google Sign-In ──────────────────────────────────────────────
     async function handleGoogleLogin() {
@@ -39,7 +41,7 @@ export default function Login() {
                 navigate(getRedirectPath(result.role));
             }
         } catch (err) {
-            setError(err.message || "Failed to authenticate with Google");
+            setError(err.message || t('login.authError'));
         }
         setLoading(false);
     }
@@ -53,7 +55,7 @@ export default function Login() {
             await completeGoogleLoginWithRole(pendingGoogleUser, role);
             navigate(getRedirectPath(role));
         } catch (err) {
-            setError(err.message || "Failed to complete Google Sign In");
+            setError(err.message || t('login.completeError'));
         }
         setLoading(false);
     }
@@ -64,15 +66,15 @@ export default function Login() {
             <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
                 <Card className="w-full max-w-md">
                     <CardHeader>
-                        <CardTitle className="text-2xl text-center">Choose Your Role</CardTitle>
+                        <CardTitle className="text-2xl text-center">{t('login.chooseRole')}</CardTitle>
                         <CardDescription className="text-center">
-                            Welcome! How would you like to use AstroCall?
+                            {t('login.chooseRoleDesc')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {error && <div className="p-3 mb-4 text-sm text-red-500 bg-red-100/50 rounded-md border border-red-200">{error}</div>}
                         <div className="space-y-4">
-                            <Label>I want to join as:</Label>
+                            <Label>{t('login.joinAs')}</Label>
                             <div className="grid grid-cols-2 gap-4">
                                 <Button
                                     type="button"
@@ -81,7 +83,7 @@ export default function Login() {
                                     className="h-20 flex-col gap-1"
                                 >
                                     <span className="text-lg">👤</span>
-                                    <span>User</span>
+                                    <span>{t('common.user')}</span>
                                 </Button>
                                 <Button
                                     type="button"
@@ -90,11 +92,11 @@ export default function Login() {
                                     className="h-20 flex-col gap-1"
                                 >
                                     <span className="text-lg">⭐</span>
-                                    <span>Astrologer</span>
+                                    <span>{t('common.astrologer')}</span>
                                 </Button>
                             </div>
                             <Button disabled={loading} className="w-full mt-4" onClick={handleCompleteGoogle}>
-                                {loading ? "Setting up..." : "Complete Sign In"}
+                                {loading ? t('login.settingUp') : t('login.completeSignIn')}
                             </Button>
                         </div>
                     </CardContent>
@@ -108,9 +110,9 @@ export default function Login() {
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
             <Card className="w-full max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-2xl text-center">Welcome to AstroCall</CardTitle>
+                    <CardTitle className="text-2xl text-center">{t('login.welcomeTitle')}</CardTitle>
                     <CardDescription className="text-center">
-                        Sign in with your Google account to get started.
+                        {t('login.welcomeDesc')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -135,7 +137,7 @@ export default function Login() {
                             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                         </svg>
-                        {loading ? "Please wait..." : "Continue with Google"}
+                        {loading ? t('login.pleaseWait') : t('login.continueGoogle')}
                     </Button>
                 </CardContent>
             </Card>

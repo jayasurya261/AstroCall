@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Twitter, Instagram, Linkedin, Mail, MapPin, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Footer() {
+    const { t } = useTranslation();
+
     return (
         <footer className="w-full bg-muted/50 border-t pb-8 pt-16 mt-auto">
             <div className="container px-4 mx-auto md:px-8">
@@ -18,7 +21,7 @@ export default function Footer() {
                             <span className="text-xl font-bold tracking-tight">AstroCall</span>
                         </div>
                         <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                            Connecting you with premium astrologers instantly through high-quality video and voice calls. Uncover your path today.
+                            {t('footer.brandDesc')}
                         </p>
                         <div className="flex items-center gap-3">
                             <a href="https://twitter.com" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
@@ -38,29 +41,29 @@ export default function Footer() {
 
                     {/* Quick Links */}
                     <div>
-                        <h3 className="font-semibold text-foreground mb-4">Platform</h3>
+                        <h3 className="font-semibold text-foreground mb-4">{t('footer.platform')}</h3>
                         <ul className="space-y-3 text-sm text-muted-foreground">
-                            <li><Link to="/astrologers" className="hover:text-primary transition-colors">Find an Astrologer</Link></li>
-                            <li><Link to="/call-logs" className="hover:text-primary transition-colors">Call History</Link></li>
-                            <li><Link to="/about" className="hover:text-primary transition-colors">How it Works</Link></li>
-                            <li><Link to="/login" className="hover:text-primary transition-colors">Pricing</Link></li>
+                            <li><Link to="/astrologers" className="hover:text-primary transition-colors">{t('footer.findAstrologer')}</Link></li>
+                            <li><Link to="/call-logs" className="hover:text-primary transition-colors">{t('footer.callHistory')}</Link></li>
+                            <li><Link to="/about" className="hover:text-primary transition-colors">{t('footer.howItWorks')}</Link></li>
+                            <li><Link to="/login" className="hover:text-primary transition-colors">{t('footer.pricing')}</Link></li>
                         </ul>
                     </div>
 
                     {/* Support */}
                     <div>
-                        <h3 className="font-semibold text-foreground mb-4">Support</h3>
+                        <h3 className="font-semibold text-foreground mb-4">{t('footer.support')}</h3>
                         <ul className="space-y-3 text-sm text-muted-foreground">
-                            <li><Link to="/about" className="hover:text-primary transition-colors">Help Center</Link></li>
-                            <li><Link to="/about" className="hover:text-primary transition-colors">Safety Guidelines</Link></li>
-                            <li><Link to="/about" className="hover:text-primary transition-colors">Terms of Service</Link></li>
-                            <li><Link to="/about" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+                            <li><Link to="/about" className="hover:text-primary transition-colors">{t('footer.helpCenter')}</Link></li>
+                            <li><Link to="/about" className="hover:text-primary transition-colors">{t('footer.safetyGuidelines')}</Link></li>
+                            <li><Link to="/about" className="hover:text-primary transition-colors">{t('footer.termsOfService')}</Link></li>
+                            <li><Link to="/about" className="hover:text-primary transition-colors">{t('footer.privacyPolicy')}</Link></li>
                         </ul>
                     </div>
 
                     {/* Contact */}
                     <div>
-                        <h3 className="font-semibold text-foreground mb-4">Contact Us</h3>
+                        <h3 className="font-semibold text-foreground mb-4">{t('footer.contactUs')}</h3>
                         <ul className="space-y-4 text-sm text-muted-foreground">
                             <li className="flex items-start gap-3">
                                 <Mail className="w-4 h-4 mt-0.5 text-primary" />
@@ -84,12 +87,12 @@ export default function Footer() {
 
                 <div className="flex flex-col items-center justify-between pt-8 border-t md:flex-row gap-4">
                     <p className="text-sm text-muted-foreground">
-                        &copy; {new Date().getFullYear()} AstroCall Inc. All rights reserved.
+                        &copy; {new Date().getFullYear()} {t('footer.allRightsReserved')}
                     </p>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <Link to="/about" className="hover:text-primary transition-colors">Terms</Link>
-                        <Link to="/about" className="hover:text-primary transition-colors">Privacy</Link>
-                        <Link to="/about" className="hover:text-primary transition-colors">Cookies</Link>
+                        <Link to="/about" className="hover:text-primary transition-colors">{t('footer.terms')}</Link>
+                        <Link to="/about" className="hover:text-primary transition-colors">{t('footer.privacy')}</Link>
+                        <Link to="/about" className="hover:text-primary transition-colors">{t('footer.cookies')}</Link>
                     </div>
                 </div>
             </div>

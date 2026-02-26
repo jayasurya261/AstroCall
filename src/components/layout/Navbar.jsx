@@ -49,9 +49,11 @@ const Navbar = () => {
                 {/* Logo + Language Switcher */}
                 <div className="flex items-center gap-3">
                     <Link to="/" className="flex items-center gap-2 no-underline">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold">
-                            AC
-                        </div>
+                        <img
+                            src="https://res.cloudinary.com/dqudvximt/image/upload/v1772113625/Untitled_1_-Photoroom_1_lsrvty.png"
+                            alt="AstroCall"
+                            className="h-8 w-auto"
+                        />
                         <span className="text-xl font-bold tracking-tight text-foreground">AstroCall</span>
                     </Link>
 

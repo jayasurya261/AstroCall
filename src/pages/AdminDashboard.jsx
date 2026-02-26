@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,9 +53,9 @@ function BarChart({ data, maxValue, height = 160 }) {
 }
 
 // Donut Chart for session status
-function DonutChart({ segments, size = 140 }) {
+function DonutChart({ segments, size = 140, noDataLabel }) {
     const total = segments.reduce((s, seg) => s + seg.value, 0);
-    if (total === 0) return <p className="text-sm text-muted-foreground text-center py-8">No data</p>;
+    if (total === 0) return <p className="text-sm text-muted-foreground text-center py-8">{noDataLabel}</p>;
 
     const cx = size / 2, cy = size / 2, r = size * 0.38, strokeW = size * 0.15;
     let accumulated = 0;
@@ -81,7 +82,7 @@ function DonutChart({ segments, size = 140 }) {
                     {total}
                 </text>
                 <text x={cx} y={cy + 12} textAnchor="middle" className="fill-muted-foreground" fontSize="10">
-                    Total
+                    {noDataLabel === undefined ? 'Total' : segments[0]?.totalLabel || 'Total'}
                 </text>
             </svg>
             <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center">
@@ -116,6 +117,7 @@ function StatCard({ icon: Icon, label, value, sublabel, color, bgColor }) {
 
 export default function AdminDashboard() {
     const { currentUser, userRole } = useAuth();
+    const { t } = useTranslation();
     const [users, setUsers] = useState([]);
     const [sessions, setSessions] = useState([]);
     const [reviews, setReviews] = useState([]);
@@ -192,8 +194,8 @@ export default function AdminDashboard() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4 text-destructive">
                 <ShieldCheck className="w-16 h-16 mb-4 opacity-50" />
-                <h1 className="text-3xl font-bold">Access Denied</h1>
-                <p className="mt-2 text-muted-foreground">You must be a Super Admin to view this page.</p>
+                <h1 className="text-3xl font-bold">{t('admin.accessDenied')}</h1>
+                <p className="mt-2 text-muted-foreground">{t('admin.accessDeniedDesc')}</p>
             </div>
         );
     }
@@ -277,21 +279,21 @@ export default function AdminDashboard() {
             <div className="mb-8">
                 <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
                     <ShieldCheck className="w-8 h-8 text-primary" />
-                    Admin Analytics Dashboard
+                    {t('admin.title')}
                 </h1>
-                <p className="text-muted-foreground mt-2">Platform overview, user activity, and performance metrics.</p>
+                <p className="text-muted-foreground mt-2">{t('admin.subtitle')}</p>
             </div>
 
             {/* Stats Row */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
-                <StatCard icon={Users} label="Total Users" value={usersCount + astrologersCount} color="bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400" />
-                <StatCard icon={User} label="Users" value={usersCount} color="bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-400" />
-                <StatCard icon={UserCog} label="Astrologers" value={astrologersCount}
-                    sublabel={`${onlineAstrologers} online`}
+                <StatCard icon={Users} label={t('admin.totalUsers')} value={usersCount + astrologersCount} color="bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400" />
+                <StatCard icon={User} label={t('admin.users')} value={usersCount} color="bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-400" />
+                <StatCard icon={UserCog} label={t('admin.astrologers')} value={astrologersCount}
+                    sublabel={`${onlineAstrologers} ${t('admin.online').toLowerCase()}`}
                     color="bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-400" />
-                <StatCard icon={Phone} label="Total Sessions" value={totalSessions} color="bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" />
-                <StatCard icon={Star} label="Reviews" value={reviews.length} color="bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400" />
-                <StatCard icon={MessageCircle} label="Conversations" value={chats.length} color="bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-400" />
+                <StatCard icon={Phone} label={t('admin.totalSessions')} value={totalSessions} color="bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" />
+                <StatCard icon={Star} label={t('admin.reviews')} value={reviews.length} color="bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400" />
+                <StatCard icon={MessageCircle} label={t('admin.conversations')} value={chats.length} color="bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-400" />
             </div>
 
             {/* Charts Row */}
@@ -300,7 +302,7 @@ export default function AdminDashboard() {
                 <Card className="lg:col-span-2">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <BarChart3 className="w-4 h-4 text-primary" /> Sessions (Last 7 Days)
+                            <BarChart3 className="w-4 h-4 text-primary" /> {t('admin.sessionsLast7')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -312,17 +314,20 @@ export default function AdminDashboard() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <Activity className="w-4 h-4 text-primary" /> Session Status
+                            <Activity className="w-4 h-4 text-primary" /> {t('admin.sessionStatus')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="flex items-center justify-center pt-2">
-                        <DonutChart segments={[
-                            { label: 'Completed', value: statusCounts.completed, color: '#22c55e' },
-                            { label: 'Active', value: statusCounts.active, color: '#3b82f6' },
-                            { label: 'Pending', value: statusCounts.pending, color: '#f59e0b' },
-                            { label: 'Rejected', value: statusCounts.rejected, color: '#ef4444' },
-                            { label: 'Cancelled', value: statusCounts.cancelled, color: '#94a3b8' },
-                        ]} />
+                        <DonutChart
+                            noDataLabel={t('admin.noData')}
+                            segments={[
+                                { label: t('admin.completed'), value: statusCounts.completed, color: '#22c55e' },
+                                { label: t('admin.active'), value: statusCounts.active, color: '#3b82f6' },
+                                { label: t('admin.pending'), value: statusCounts.pending, color: '#f59e0b' },
+                                { label: t('admin.rejected'), value: statusCounts.rejected, color: '#ef4444' },
+                                { label: t('admin.cancelled'), value: statusCounts.cancelled, color: '#94a3b8' },
+                            ]}
+                        />
                     </CardContent>
                 </Card>
             </div>
@@ -333,30 +338,30 @@ export default function AdminDashboard() {
                 <Card>
                     <CardHeader className="pb-3">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-primary" /> Activity Metrics
+                            <Clock className="w-4 h-4 text-primary" /> {t('admin.activityMetrics')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-3 rounded-xl border bg-muted/30">
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Avg Session Duration</p>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('admin.avgSessionDuration')}</p>
                                 <p className="text-xl font-bold text-foreground mt-1">{avgMins > 0 ? `${avgMins} min` : '—'}</p>
                             </div>
                             <div className="p-3 rounded-xl border bg-muted/30">
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Completed Sessions</p>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('admin.completedSessions')}</p>
                                 <p className="text-xl font-bold text-foreground mt-1">{completedSessions.length}</p>
                             </div>
                             <div className="p-3 rounded-xl border bg-muted/30">
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Video Calls</p>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('admin.videoCalls')}</p>
                                 <p className="text-xl font-bold text-foreground mt-1">{videoCount}</p>
                             </div>
                             <div className="p-3 rounded-xl border bg-muted/30">
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Voice Calls</p>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('admin.voiceCalls')}</p>
                                 <p className="text-xl font-bold text-foreground mt-1">{voiceCount}</p>
                             </div>
                         </div>
                         <div className="p-3 rounded-xl border bg-muted/30">
-                            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Completion Rate</p>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">{t('admin.completionRate')}</p>
                             <div className="flex items-center gap-3">
                                 <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
                                     <div
@@ -376,13 +381,13 @@ export default function AdminDashboard() {
                 <Card>
                     <CardHeader className="pb-3">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4 text-primary" /> Top Astrologers
+                            <TrendingUp className="w-4 h-4 text-primary" /> {t('admin.topAstrologers')}
                         </CardTitle>
-                        <CardDescription>By number of sessions</CardDescription>
+                        <CardDescription>{t('admin.byNumberOfSessions')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {topAstrologers.length === 0 ? (
-                            <p className="text-sm text-muted-foreground text-center py-6">No astrologer data yet</p>
+                            <p className="text-sm text-muted-foreground text-center py-6">{t('admin.noAstrologerData')}</p>
                         ) : (
                             <div className="space-y-3">
                                 {topAstrologers.map((astro, i) => (
@@ -400,18 +405,18 @@ export default function AdminDashboard() {
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-foreground truncate">{astro.name || 'Unknown'}</p>
                                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                <span>{astro.sessionCount} sessions</span>
+                                                <span>{astro.sessionCount} {t('admin.sessions')}</span>
                                                 {astro.avgRating > 0 && (
                                                     <span className="flex items-center gap-0.5">
                                                         <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
                                                         {astro.avgRating}
                                                     </span>
                                                 )}
-                                                <span>{astro.reviewCount} reviews</span>
+                                                <span>{astro.reviewCount} {t('admin.reviews')}</span>
                                             </div>
                                         </div>
                                         <Badge variant={astro.isOnline ? 'default' : 'secondary'} className="text-[10px] shrink-0">
-                                            {astro.isOnline ? 'Online' : 'Offline'}
+                                            {astro.isOnline ? t('admin.online') : t('admin.offline')}
                                         </Badge>
                                     </div>
                                 ))}
@@ -424,17 +429,17 @@ export default function AdminDashboard() {
             {/* User Management Table */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-base">User Management</CardTitle>
-                    <CardDescription>Promote users to astrologers or manage roles.</CardDescription>
+                    <CardTitle className="text-base">{t('admin.userManagement')}</CardTitle>
+                    <CardDescription>{t('admin.userManagementDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="divide-y overflow-x-auto">
                         <table className="w-full text-sm text-left">
                             <thead className="text-xs text-muted-foreground uppercase bg-muted/30">
                                 <tr>
-                                    <th className="px-6 py-4 font-medium">Platform User</th>
-                                    <th className="px-6 py-4 font-medium">Current Role</th>
-                                    <th className="px-6 py-4 font-medium text-right">Actions</th>
+                                    <th className="px-6 py-4 font-medium">{t('admin.platformUser')}</th>
+                                    <th className="px-6 py-4 font-medium">{t('admin.currentRole')}</th>
+                                    <th className="px-6 py-4 font-medium text-right">{t('admin.actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y">
@@ -467,7 +472,7 @@ export default function AdminDashboard() {
                                                     className="shadow-sm"
                                                 >
                                                     <TrendingUp className="w-4 h-4 mr-2" />
-                                                    Promote to Astrologer
+                                                    {t('admin.promoteToAstrologer')}
                                                 </Button>
                                             )}
                                             {userItem.role === 'astrologer' && (
@@ -487,9 +492,9 @@ export default function AdminDashboard() {
                                                     }}
                                                 >
                                                     {astrologers.find(a => a.id === userItem.id)?.verified ? (
-                                                        <><CheckCircle2 className="w-4 h-4" /> Verified</>
+                                                        <><CheckCircle2 className="w-4 h-4" /> {t('admin.verified')}</>
                                                     ) : (
-                                                        <><BadgeCheck className="w-4 h-4" /> Verify</>
+                                                        <><BadgeCheck className="w-4 h-4" /> {t('admin.verify')}</>
                                                     )}
                                                 </Button>
                                             )}
@@ -506,18 +511,18 @@ export default function AdminDashboard() {
             <Card className="mt-8">
                 <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
-                        <Flag className="w-4 h-4 text-red-500" /> Content Moderation
+                        <Flag className="w-4 h-4 text-red-500" /> {t('admin.contentModeration')}
                     </CardTitle>
                     <CardDescription>
-                        Review flagged content reported by users. {reports.filter(r => r.status === 'pending').length} pending reports.
+                        {t('admin.contentModerationDesc')} {t('admin.pendingReports', { count: reports.filter(r => r.status === 'pending').length })}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     {reports.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
                             <Flag className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                            <p className="text-sm font-medium">No reports yet</p>
-                            <p className="text-xs mt-1">Flagged reviews and messages will appear here.</p>
+                            <p className="text-sm font-medium">{t('admin.noReports')}</p>
+                            <p className="text-xs mt-1">{t('admin.noReportsDesc')}</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -532,10 +537,10 @@ export default function AdminDashboard() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap mb-1.5">
                                                 <Badge variant={report.status === 'pending' ? 'destructive' : 'secondary'} className="text-[10px]">
-                                                    {report.status === 'pending' ? '⚠ Pending' : report.status === 'dismissed' ? '✓ Dismissed' : '🗑 Deleted'}
+                                                    {report.status === 'pending' ? t('admin.pendingStatus') : report.status === 'dismissed' ? t('admin.dismissedStatus') : t('admin.deletedStatus')}
                                                 </Badge>
                                                 <Badge variant="outline" className="text-[10px]">
-                                                    {report.type === 'review' ? '📝 Review' : '💬 Message'}
+                                                    {report.type === 'review' ? t('admin.reviewType') : t('admin.messageType')}
                                                 </Badge>
                                                 {report.rating && (
                                                     <span className="flex items-center gap-0.5 text-xs text-yellow-600">
@@ -550,8 +555,8 @@ export default function AdminDashboard() {
                                                 </p>
                                             )}
                                             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px] text-muted-foreground">
-                                                <span>By: <span className="font-medium text-foreground">{report.reportedUserEmail || 'Unknown'}</span></span>
-                                                <span>Reported by: <span className="font-medium text-foreground">{report.reportedByEmail}</span></span>
+                                                <span>{t('admin.by')}: <span className="font-medium text-foreground">{report.reportedUserEmail || 'Unknown'}</span></span>
+                                                <span>{t('admin.reportedBy')}: <span className="font-medium text-foreground">{report.reportedByEmail}</span></span>
                                                 <span>
                                                     {report.createdAt?.toDate
                                                         ? new Date(report.createdAt.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -574,7 +579,7 @@ export default function AdminDashboard() {
                                                         }
                                                     }}
                                                 >
-                                                    <CheckCircle2 className="w-3.5 h-3.5" /> Dismiss
+                                                    <CheckCircle2 className="w-3.5 h-3.5" /> {t('admin.dismiss')}
                                                 </Button>
                                                 <Button
                                                     size="sm"
@@ -593,7 +598,7 @@ export default function AdminDashboard() {
                                                         }
                                                     }}
                                                 >
-                                                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                                                    <Trash2 className="w-3.5 h-3.5" /> {t('admin.delete')}
                                                 </Button>
                                             </div>
                                         )}

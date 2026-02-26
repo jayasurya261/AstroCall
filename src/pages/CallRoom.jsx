@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { generateLiveKitToken, getLiveKitUrl } from '@/lib/livekit';
@@ -13,6 +14,7 @@ export default function CallRoom() {
     const { currentUser, userRole } = useAuth();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const roomName = searchParams.get('room');
     const callType = searchParams.get('type') || 'video';
@@ -26,11 +28,11 @@ export default function CallRoom() {
 
         async function getToken() {
             try {
-                const t = await generateLiveKitToken(roomName, currentUser.uid, callType);
-                setToken(t);
+                const tk = await generateLiveKitToken(roomName, currentUser.uid, callType);
+                setToken(tk);
             } catch (err) {
                 console.error('Token generation error:', err);
-                setError('Failed to generate access token.');
+                setError(t('callRoom.tokenError'));
             } finally {
                 setLoading(false);
             }
@@ -71,7 +73,7 @@ export default function CallRoom() {
             <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
                 <div className="text-center space-y-4">
                     <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
-                    <p className="text-muted-foreground">Connecting to {callType} call...</p>
+                    <p className="text-muted-foreground">{t('callRoom.connectingTo', { type: callType })}</p>
                 </div>
             </div>
         );
@@ -83,8 +85,8 @@ export default function CallRoom() {
             <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
                 <div className="text-center space-y-4">
                     <PhoneOff className="w-10 h-10 text-red-500 mx-auto" />
-                    <p className="text-red-500 font-medium">{error || 'Invalid call link.'}</p>
-                    <Button onClick={() => navigate('/')}>Go Home</Button>
+                    <p className="text-red-500 font-medium">{error || t('callRoom.invalidLink')}</p>
+                    <Button onClick={() => navigate('/')}>{t('callRoom.goHome')}</Button>
                 </div>
             </div>
         );
@@ -113,8 +115,8 @@ export default function CallRoom() {
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-foreground">Voice Call Active</h2>
-                                <p className="text-muted-foreground mt-1">Room: {roomName}</p>
+                                <h2 className="text-2xl font-bold text-foreground">{t('callRoom.voiceCallActive')}</h2>
+                                <p className="text-muted-foreground mt-1">{t('callRoom.room')}: {roomName}</p>
                             </div>
                         </div>
                     </div>

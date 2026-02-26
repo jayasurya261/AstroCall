@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,6 +19,7 @@ export default function AstrologerProfile() {
     const { id } = useParams();
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const [astro, setAstro] = useState(null);
     const [reviews, setReviews] = useState([]);
@@ -91,14 +93,14 @@ export default function AstrologerProfile() {
                 status: 'pending',
                 startedAt: serverTimestamp(),
             });
-            toast(`${callType === 'video' ? 'Video' : 'Voice'} call request sent!`, {
-                description: 'Waiting for the astrologer to accept...',
+            toast(`${callType === 'video' ? 'Video' : 'Voice'} ${t('astrologerProfile.callRequestSent')}`, {
+                description: t('astrologerProfile.waitingAccept'),
                 style: { background: '#e0f2fe', color: '#0369a1', border: '1px solid #7dd3fc' },
             });
             navigate('/user-dashboard');
         } catch (err) {
             console.error('Booking error:', err);
-            toast('Failed to book session', {
+            toast(t('astrologerProfile.bookingFailed'), {
                 style: { background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' },
             });
         } finally {
@@ -122,7 +124,7 @@ export default function AstrologerProfile() {
             navigate(`/chat?id=${chatId}`);
         } catch (err) {
             console.error('Error starting chat:', err);
-            toast('Failed to start chat', {
+            toast(t('astrologerProfile.chatFailed'), {
                 style: { background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' },
             });
         } finally {
@@ -153,10 +155,10 @@ export default function AstrologerProfile() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
                 <UserX className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
-                <h1 className="text-2xl font-bold text-foreground">Astrologer Not Found</h1>
-                <p className="text-muted-foreground mt-2">This profile doesn't exist or has been removed.</p>
+                <h1 className="text-2xl font-bold text-foreground">{t('astrologerProfile.notFoundTitle')}</h1>
+                <p className="text-muted-foreground mt-2">{t('astrologerProfile.notFoundDesc')}</p>
                 <Button asChild className="mt-6">
-                    <Link to="/astrologers">Browse Astrologers</Link>
+                    <Link to="/astrologers">{t('astrologerProfile.browseAstrologers')}</Link>
                 </Button>
             </div>
         );
@@ -168,7 +170,7 @@ export default function AstrologerProfile() {
             <Button asChild variant="ghost" size="sm" className="mb-6 gap-2 text-muted-foreground">
                 <Link to="/astrologers">
                     <ArrowLeft className="w-4 h-4" />
-                    Back to Astrologers
+                    {t('astrologerProfile.backToAstrologers')}
                 </Link>
             </Button>
 
@@ -186,15 +188,15 @@ export default function AstrologerProfile() {
                         </div>
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                                <h1 className="text-2xl font-bold text-foreground">{astro.name || 'Astrologer'}</h1>
+                                <h1 className="text-2xl font-bold text-foreground">{astro.name || t('common.astrologer')}</h1>
                                 {astro.verified && <CheckCircle2 className="w-5 h-5 text-primary fill-primary/20" title="Verified Astrologer" />}
                                 <Badge variant={astro.isOnline ? "default" : "secondary"} className="ml-2">
-                                    {astro.isOnline ? "Online" : "Offline"}
+                                    {astro.isOnline ? t('admin.online') : t('admin.offline')}
                                 </Badge>
                                 <button
                                     className="ml-auto p-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
                                     disabled={togglingFav}
-                                    title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                                    title={isFavorited ? t('astrologerProfile.removedFavorite') : t('astrologerProfile.addedFavorite')}
                                     onClick={async () => {
                                         if (!currentUser) { navigate('/login'); return; }
                                         setTogglingFav(true);
@@ -203,12 +205,12 @@ export default function AstrologerProfile() {
                                                 await deleteDoc(doc(db, 'favorites', favDocId));
                                                 setIsFavorited(false);
                                                 setFavDocId(null);
-                                                toast('Removed from favorites');
+                                                toast(t('astrologerProfile.removedFavorite'));
                                             } else {
                                                 const ref = await addDoc(collection(db, 'favorites'), { userId: currentUser.uid, astroId: id, createdAt: serverTimestamp() });
                                                 setIsFavorited(true);
                                                 setFavDocId(ref.id);
-                                                toast('Added to favorites!');
+                                                toast(t('astrologerProfile.addedFavorite'));
                                             }
                                         } catch (err) {
                                             console.error(err);
@@ -231,8 +233,8 @@ export default function AstrologerProfile() {
                                         />
                                     ))}
                                 </div>
-                                <span className="text-sm font-medium text-yellow-700">{avgRating || 'New'}</span>
-                                <span className="text-sm text-muted-foreground">({reviews.length} reviews)</span>
+                                <span className="text-sm font-medium text-yellow-700">{avgRating || t('common.new')}</span>
+                                <span className="text-sm text-muted-foreground">({reviews.length} {t('astrologerProfile.reviews')})</span>
                             </div>
 
                             {/* Details */}
@@ -264,16 +266,16 @@ export default function AstrologerProfile() {
 
                     {/* Bio */}
                     <div className="mt-6">
-                        <h2 className="text-lg font-semibold text-foreground mb-2">About</h2>
+                        <h2 className="text-lg font-semibold text-foreground mb-2">{t('astrologerProfile.about')}</h2>
                         <p className="text-muted-foreground leading-relaxed">
-                            {astro.bio || 'Professional Astrologer dedicated to helping you find your path through the stars. Specializing in Vedic astrology, career guidance, and relationship counseling. With years of experience, I provide accurate and insightful readings to help you navigate life\'s challenges.'}
+                            {astro.bio || t('astrologerProfile.defaultBio')}
                         </p>
                     </div>
 
                     {/* Specializations */}
                     {astro.specializations?.length > 0 && (
                         <div className="mt-6">
-                            <h2 className="text-lg font-semibold text-foreground mb-2">Specializations</h2>
+                            <h2 className="text-lg font-semibold text-foreground mb-2">{t('astrologerProfile.specializations')}</h2>
                             <div className="flex flex-wrap gap-2">
                                 {astro.specializations.map(spec => (
                                     <Badge key={spec} className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
@@ -291,7 +293,7 @@ export default function AstrologerProfile() {
                         <CardContent className="p-6">
                             <div className="text-center mb-4">
                                 <p className="text-3xl font-bold text-foreground">${astro.hourlyRate || 30}</p>
-                                <p className="text-sm text-muted-foreground">per hour</p>
+                                <p className="text-sm text-muted-foreground">{t('astrologerProfile.perHour')}</p>
                             </div>
 
                             {astro.isOnline ? (
@@ -306,7 +308,7 @@ export default function AstrologerProfile() {
                                         ) : (
                                             <Video className="w-4 h-4" />
                                         )}
-                                        Book Video Call
+                                        {t('astrologerProfile.bookVideoCall')}
                                     </Button>
                                     <Button
                                         variant="outline"
@@ -319,13 +321,13 @@ export default function AstrologerProfile() {
                                         ) : (
                                             <Phone className="w-4 h-4" />
                                         )}
-                                        Book Voice Call
+                                        {t('astrologerProfile.bookVoiceCall')}
                                     </Button>
                                 </div>
                             ) : (
                                 <div className="text-center py-4 bg-muted/30 rounded-lg border border-dashed">
-                                    <p className="text-sm text-muted-foreground">Currently offline</p>
-                                    <p className="text-xs text-muted-foreground mt-1">Check back later for availability</p>
+                                    <p className="text-sm text-muted-foreground">{t('astrologerProfile.currentlyOffline')}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">{t('astrologerProfile.checkLater')}</p>
                                 </div>
                             )}
 
@@ -341,18 +343,18 @@ export default function AstrologerProfile() {
                                 ) : (
                                     <MessageSquare className="w-4 h-4" />
                                 )}
-                                Send Message
+                                {t('astrologerProfile.sendMessage')}
                             </Button>
 
                             {/* Quick stats */}
                             <div className="grid grid-cols-2 gap-3 mt-5 pt-5 border-t">
                                 <div className="text-center">
                                     <p className="text-lg font-bold text-foreground">{avgRating || '—'}</p>
-                                    <p className="text-xs text-muted-foreground">Rating</p>
+                                    <p className="text-xs text-muted-foreground">{t('astrologerProfile.rating')}</p>
                                 </div>
                                 <div className="text-center">
                                     <p className="text-lg font-bold text-foreground">{reviews.length}</p>
-                                    <p className="text-xs text-muted-foreground">Reviews</p>
+                                    <p className="text-xs text-muted-foreground">{t('astrologerProfile.reviews')}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -365,7 +367,7 @@ export default function AstrologerProfile() {
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                         <MessageSquare className="w-5 h-5 text-yellow-600" />
-                        Client Reviews ({reviews.length})
+                        {t('astrologerProfile.clientReviews')} ({reviews.length})
                     </h2>
                 </div>
 
@@ -383,7 +385,7 @@ export default function AstrologerProfile() {
                                         />
                                     ))}
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-1">{reviews.length} reviews</p>
+                                <p className="text-xs text-muted-foreground mt-1">{reviews.length} {t('astrologerProfile.reviews')}</p>
                             </div>
                             <div className="flex-1 space-y-1.5">
                                 {ratingCounts.map(({ star, count }) => (
@@ -408,8 +410,8 @@ export default function AstrologerProfile() {
                 {reviews.length === 0 ? (
                     <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
                         <Star className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-40" />
-                        <h3 className="text-base font-medium text-foreground">No reviews yet</h3>
-                        <p className="text-sm text-muted-foreground mt-1">Be the first to review this astrologer!</p>
+                        <h3 className="text-base font-medium text-foreground">{t('astrologerProfile.noReviewsYet')}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{t('astrologerProfile.beFirstReview')}</p>
                     </div>
                 ) : (
                     <div className="grid gap-3">
@@ -425,7 +427,7 @@ export default function AstrologerProfile() {
                                             </Avatar>
                                             <div>
                                                 <p className="font-medium text-sm text-foreground">
-                                                    {review.userEmail?.split('@')[0] || 'User'}
+                                                    {review.userEmail?.split('@')[0] || t('common.user')}
                                                 </p>
                                                 <p className="text-xs text-muted-foreground">
                                                     {review.createdAt?.toDate
@@ -467,19 +469,19 @@ export default function AstrologerProfile() {
                                                             status: 'pending',
                                                             createdAt: serverTimestamp(),
                                                         });
-                                                        toast('Review reported', {
-                                                            description: 'Admin will review this content.',
+                                                        toast(t('astrologerProfile.reportSuccess'), {
+                                                            description: t('astrologerProfile.reportSuccessDesc'),
                                                             style: { background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' },
                                                         });
                                                     } catch (err) {
                                                         console.error('Error reporting:', err);
-                                                        toast('Failed to report', { style: { background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' } });
+                                                        toast(t('astrologerProfile.reportFailed'), { style: { background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' } });
                                                     }
                                                 }}
                                                 className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-red-500 transition-colors px-2 py-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10"
-                                                title="Report this review"
+                                                title={t('astrologerProfile.report')}
                                             >
-                                                <Flag className="w-3 h-3" /> Report
+                                                <Flag className="w-3 h-3" /> {t('astrologerProfile.report')}
                                             </button>
                                         </div>
                                     )}
