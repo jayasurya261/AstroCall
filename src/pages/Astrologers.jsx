@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, where, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Video, Phone, Star, CheckCircle2, Users, Loader2 } from 'lucide-react';
+import { Video, Phone, Star, CheckCircle2, Users, Loader2, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Astrologers() {
@@ -15,7 +15,12 @@ export default function Astrologers() {
     const navigate = useNavigate();
     const [astrologers, setAstrologers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [bookingId, setBookingId] = useState(null); // tracks which astrologer is being booked
+    const [bookingId, setBookingId] = useState(null);
+
+    // Reviews state
+    const [expandedReviews, setExpandedReviews] = useState(null); // astroId or null
+    const [astroReviews, setAstroReviews] = useState({}); // { [astroId]: [...reviews] }
+    const [loadingReviews, setLoadingReviews] = useState(null); // astroId or null
 
     useEffect(() => {
         async function fetchAstrologers() {
@@ -42,6 +47,35 @@ export default function Astrologers() {
         fetchAstrologers();
     }, []);
 
+    // Toggle & fetch reviews for an astrologer
+    async function toggleReviews(astroId) {
+        if (expandedReviews === astroId) {
+            setExpandedReviews(null);
+            return;
+        }
+        setExpandedReviews(astroId);
+
+        // Skip if already fetched
+        if (astroReviews[astroId]) return;
+
+        setLoadingReviews(astroId);
+        try {
+            const q = query(collection(db, 'reviews'), where('astroId', '==', astroId));
+            const snap = await getDocs(q);
+            const revs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            revs.sort((a, b) => {
+                const aTime = a.createdAt?.toDate?.() || new Date(0);
+                const bTime = b.createdAt?.toDate?.() || new Date(0);
+                return bTime - aTime;
+            });
+            setAstroReviews(prev => ({ ...prev, [astroId]: revs }));
+        } catch (err) {
+            console.error('Error fetching reviews:', err);
+        } finally {
+            setLoadingReviews(null);
+        }
+    }
+
     async function handleBook(astroId, callType) {
         if (!currentUser) {
             navigate('/login');
@@ -50,7 +84,6 @@ export default function Astrologers() {
 
         setBookingId(astroId + '-' + callType);
         try {
-            // Generate a unique room name
             const roomName = `astrocall-${astroId.substring(0, 6)}-${Date.now()}`;
 
             await addDoc(collection(db, 'sessions'), {
@@ -115,7 +148,7 @@ export default function Astrologers() {
                             <CardHeader className="p-6 pb-0 flex flex-row items-start gap-4 space-y-0">
                                 <div className="relative">
                                     <Avatar className="w-20 h-20 border-2 border-primary/20">
-                                        <AvatarImage src={`https://i.pravatar.cc/150?u=${astro.id}`} />
+                                        <AvatarImage src={astro.photoURL || `https://i.pravatar.cc/150?u=${astro.id}`} />
                                         <AvatarFallback>{(astro.name || 'AS').substring(0, 2).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                     <span className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-background ${astro.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
@@ -154,32 +187,109 @@ export default function Astrologers() {
                                     ))}
                                 </div>
                             </CardContent>
+
+                            {/* View Reviews Toggle */}
+                            {(astro.reviews || 0) > 0 && (
+                                <div className="px-6 pb-2">
+                                    <button
+                                        onClick={() => toggleReviews(astro.id)}
+                                        className="flex items-center gap-1.5 text-xs font-medium text-yellow-700 hover:text-yellow-800 transition-colors w-full justify-center py-1.5 rounded-md hover:bg-yellow-50"
+                                    >
+                                        <MessageSquare className="w-3.5 h-3.5" />
+                                        {expandedReviews === astro.id ? 'Hide Reviews' : `View ${astro.reviews} Reviews`}
+                                        {expandedReviews === astro.id ? (
+                                            <ChevronUp className="w-3.5 h-3.5" />
+                                        ) : (
+                                            <ChevronDown className="w-3.5 h-3.5" />
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Expanded Reviews */}
+                            {expandedReviews === astro.id && (
+                                <div className="border-t bg-gradient-to-b from-yellow-50/40 to-transparent px-6 py-4 max-h-60 overflow-y-auto">
+                                    {loadingReviews === astro.id ? (
+                                        <div className="flex items-center justify-center py-4">
+                                            <Loader2 className="w-5 h-5 animate-spin text-yellow-600" />
+                                        </div>
+                                    ) : (astroReviews[astro.id] || []).length === 0 ? (
+                                        <p className="text-xs text-muted-foreground text-center py-3">No reviews yet.</p>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {astroReviews[astro.id].map(review => (
+                                                <div key={review.id} className="bg-background rounded-lg p-3 border shadow-sm">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Avatar className="w-6 h-6 border">
+                                                                <AvatarFallback className="text-[10px]">
+                                                                    {(review.userEmail || 'U').charAt(0).toUpperCase()}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <span className="text-xs font-medium text-foreground">
+                                                                {review.userEmail?.split('@')[0] || 'User'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-0.5">
+                                                            {[1, 2, 3, 4, 5].map(s => (
+                                                                <Star
+                                                                    key={s}
+                                                                    className={`w-3 h-3 ${s <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    {review.comment && (
+                                                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                                            "{review.comment}"
+                                                        </p>
+                                                    )}
+                                                    <p className="text-[10px] text-muted-foreground/60 mt-1">
+                                                        {review.createdAt?.toDate
+                                                            ? new Date(review.createdAt.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                                            : 'Recent'}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             <CardFooter className="p-6 pt-0 gap-3">
-                                <Button
-                                    className="flex-1 gap-2 shadow-md shadow-primary/20"
-                                    disabled={!!bookingId}
-                                    onClick={() => handleBook(astro.id, 'video')}
-                                >
-                                    {bookingId === astro.id + '-video' ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <Video className="w-4 h-4" />
-                                    )}
-                                    Video Call
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="flex-1 gap-2 bg-muted/10"
-                                    disabled={!!bookingId}
-                                    onClick={() => handleBook(astro.id, 'voice')}
-                                >
-                                    {bookingId === astro.id + '-voice' ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <Phone className="w-4 h-4" />
-                                    )}
-                                    Voice Call
-                                </Button>
+                                {astro.isOnline ? (
+                                    <>
+                                        <Button
+                                            className="flex-1 gap-2 shadow-md shadow-primary/20"
+                                            disabled={!!bookingId}
+                                            onClick={() => handleBook(astro.id, 'video')}
+                                        >
+                                            {bookingId === astro.id + '-video' ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Video className="w-4 h-4" />
+                                            )}
+                                            Video Call
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            className="flex-1 gap-2 bg-muted/10"
+                                            disabled={!!bookingId}
+                                            onClick={() => handleBook(astro.id, 'voice')}
+                                        >
+                                            {bookingId === astro.id + '-voice' ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Phone className="w-4 h-4" />
+                                            )}
+                                            Voice Call
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <div className="w-full text-center py-2 text-sm text-muted-foreground bg-muted/30 rounded-md">
+                                        Astrologer is currently offline
+                                    </div>
+                                )}
                             </CardFooter>
                         </Card>
                     ))}

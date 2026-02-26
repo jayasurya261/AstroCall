@@ -1,7 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import Login from "@/pages/Login";
 import Home from "@/pages/Home";
@@ -11,6 +11,14 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AstrologerDashboard from "@/pages/AstrologerDashboard";
 import CallRoom from "@/pages/CallRoom";
 
+function HomeRedirect() {
+  const { currentUser, userRole } = useAuth();
+  if (!currentUser) return <Home />;
+  if (userRole === "astrologer") return <Navigate to="/astrologer-dashboard" replace />;
+  if (userRole === "superadmin") return <Navigate to="/admin-dashboard" replace />;
+  return <Navigate to="/user-dashboard" replace />;
+}
+
 function App() {
   return (
     <Router>
@@ -19,7 +27,7 @@ function App() {
           <Navbar />
           <main className="flex-grow">
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<HomeRedirect />} />
               <Route path="/login" element={<Login />} />
               <Route path="/astrologers" element={<Astrologers />} />
               <Route path="/user-dashboard" element={<UserDashboard />} />
