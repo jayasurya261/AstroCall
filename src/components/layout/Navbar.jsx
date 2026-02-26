@@ -111,14 +111,22 @@ const Navbar = () => {
                                             <Link to="/astrologer-dashboard">Dashboard</Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild>
+                                            <Link to="/chat">Messages</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
                                             <Link to="/astrologer-reviews">My Reviews</Link>
                                         </DropdownMenuItem>
                                     </>
                                 )}
                                 {userRole === 'user' && (
-                                    <DropdownMenuItem asChild>
-                                        <Link to="/user-dashboard">My Sessions</Link>
-                                    </DropdownMenuItem>
+                                    <>
+                                        <DropdownMenuItem asChild>
+                                            <Link to="/user-dashboard">My Sessions</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link to="/chat">Messages</Link>
+                                        </DropdownMenuItem>
+                                    </>
                                 )}
                                 <DropdownMenuItem>Profile</DropdownMenuItem>
                                 <DropdownMenuItem>Settings</DropdownMenuItem>

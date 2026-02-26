@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Clock, PhoneCall, Calendar, Video, Phone, Check, X, Power, DollarSign, Camera, Star, MessageSquare } from 'lucide-react';
+import { Clock, PhoneCall, Calendar, Video, Phone, Check, X, Power, DollarSign, Camera, Star, MessageSquare, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AstrologerDashboard() {
@@ -27,6 +27,7 @@ export default function AstrologerDashboard() {
     const fileInputRef = React.useRef(null);
     const [myReviews, setMyReviews] = useState([]);
     const [reviewsLoading, setReviewsLoading] = useState(true);
+    const [myChats, setMyChats] = useState([]);
 
     // Fetch online status from astrologers collection
     async function fetchOnlineStatus() {
@@ -170,10 +171,32 @@ export default function AstrologerDashboard() {
         }
     }
 
+    // Fetch chats for this astrologer
+    async function fetchMyChats() {
+        if (!currentUser) return;
+        try {
+            const q = query(
+                collection(db, 'chats'),
+                where('astroId', '==', currentUser.uid)
+            );
+            const snap = await getDocs(q);
+            const chatList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            chatList.sort((a, b) => {
+                const aTime = a.lastMessageAt?.toDate?.() || new Date(0);
+                const bTime = b.lastMessageAt?.toDate?.() || new Date(0);
+                return bTime - aTime;
+            });
+            setMyChats(chatList);
+        } catch (err) {
+            console.error('Error fetching chats:', err);
+        }
+    }
+
     useEffect(() => {
         fetchOnlineStatus();
         fetchSessions();
         fetchMyReviews();
+        fetchMyChats();
     }, [currentUser]);
 
     // Accept a session
@@ -526,6 +549,64 @@ export default function AstrologerDashboard() {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Messages - All client conversations */}
+            <div className="mt-10">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1 flex items-center gap-2">
+                    <MessageCircle className="w-6 h-6 text-blue-600" />
+                    Client Messages
+                    {myChats.length > 0 && (
+                        <Badge variant="secondary" className="text-xs ml-2">
+                            {myChats.length}
+                        </Badge>
+                    )}
+                </h2>
+                <p className="text-muted-foreground mb-6 text-sm">Click on a conversation to start chatting.</p>
+
+                {myChats.length === 0 ? (
+                    <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+                        <MessageCircle className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-40" />
+                        <h3 className="text-base font-medium text-foreground">No messages yet</h3>
+                        <p className="text-sm text-muted-foreground mt-1">When users message you, their conversations will appear here.</p>
+                    </div>
+                ) : (
+                    <div className="grid gap-2 max-h-[500px] overflow-y-auto pr-1">
+                        {myChats.map(chat => (
+                            <Link
+                                key={chat.id}
+                                to={`/chat?id=${chat.id}`}
+                                className="flex items-center gap-4 p-4 rounded-xl bg-background border hover:border-blue-300 dark:hover:border-blue-500/40 hover:shadow-sm transition-all group"
+                            >
+                                <Avatar className="w-10 h-10 border shrink-0">
+                                    <AvatarFallback className="text-sm bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400">
+                                        {(chat.userName || chat.userEmail || 'U').charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                        <p className="font-medium text-sm text-foreground group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors truncate">
+                                            {chat.userName || chat.userEmail?.split('@')[0] || 'User'}
+                                        </p>
+                                        <span className="text-[11px] text-muted-foreground shrink-0 ml-3">
+                                            {chat.lastMessageAt?.toDate
+                                                ? new Date(chat.lastMessageAt.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                                                : ''}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between mt-0.5">
+                                        <p className="text-xs text-muted-foreground truncate">
+                                            {chat.lastMessage || 'No messages yet'}
+                                        </p>
+                                        <span className="text-xs text-muted-foreground shrink-0 ml-3">
+                                            {chat.userEmail}
+                                        </span>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

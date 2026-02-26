@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Video, Phone, Star, CheckCircle2, Users, Loader2, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { getOrCreateChat } from '@/pages/Chat';
 
 export default function Astrologers() {
     const { currentUser } = useAuth();
@@ -146,16 +147,18 @@ export default function Astrologers() {
                     {astrologers.map(astro => (
                         <Card key={astro.id} className={`overflow-hidden flex flex-col transition-colors ${astro.isOnline ? 'hover:border-primary/50' : 'opacity-75'}`}>
                             <CardHeader className="p-6 pb-0 flex flex-row items-start gap-4 space-y-0">
-                                <div className="relative">
-                                    <Avatar className="w-20 h-20 border-2 border-primary/20">
+                                <Link to={`/astrologer/${astro.id}`} className="relative group cursor-pointer">
+                                    <Avatar className="w-20 h-20 border-2 border-primary/20 group-hover:border-primary/50 transition-colors">
                                         <AvatarImage src={astro.photoURL || `https://i.pravatar.cc/150?u=${astro.id}`} />
                                         <AvatarFallback>{(astro.name || 'AS').substring(0, 2).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                     <span className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-background ${astro.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                                </div>
+                                </Link>
                                 <div className="flex flex-col flex-1 pl-2">
                                     <div className="flex items-center gap-1.5 mb-1">
-                                        <h3 className="font-bold text-lg leading-none">{astro.name || 'Astrologer'}</h3>
+                                        <Link to={`/astrologer/${astro.id}`} className="font-bold text-lg leading-none hover:text-primary transition-colors">
+                                            {astro.name || 'Astrologer'}
+                                        </Link>
                                         <CheckCircle2 className="w-4 h-4 text-primary fill-primary/20" />
                                     </div>
                                     <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 mb-2">
@@ -256,7 +259,7 @@ export default function Astrologers() {
                                 </div>
                             )}
 
-                            <CardFooter className="p-6 pt-0 gap-3">
+                            <CardFooter className="p-6 pt-0 gap-2">
                                 {astro.isOnline ? (
                                     <>
                                         <Button
@@ -269,7 +272,7 @@ export default function Astrologers() {
                                             ) : (
                                                 <Video className="w-4 h-4" />
                                             )}
-                                            Video Call
+                                            Video
                                         </Button>
                                         <Button
                                             variant="outline"
@@ -282,14 +285,32 @@ export default function Astrologers() {
                                             ) : (
                                                 <Phone className="w-4 h-4" />
                                             )}
-                                            Voice Call
+                                            Voice
                                         </Button>
                                     </>
                                 ) : (
-                                    <div className="w-full text-center py-2 text-sm text-muted-foreground bg-muted/30 rounded-md">
-                                        Astrologer is currently offline
+                                    <div className="flex-1 text-center py-2 text-sm text-muted-foreground bg-muted/30 rounded-md">
+                                        Currently offline
                                     </div>
                                 )}
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="shrink-0"
+                                    title="Send Message"
+                                    onClick={async () => {
+                                        if (!currentUser) { navigate('/login'); return; }
+                                        try {
+                                            const chatId = await getOrCreateChat(currentUser.uid, currentUser.email, astro.id, astro.name || 'Astrologer');
+                                            navigate(`/chat?id=${chatId}`);
+                                        } catch (err) {
+                                            console.error(err);
+                                            toast('Failed to start chat');
+                                        }
+                                    }}
+                                >
+                                    <MessageSquare className="w-4 h-4" />
+                                </Button>
                             </CardFooter>
                         </Card>
                     ))}

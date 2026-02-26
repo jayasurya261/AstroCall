@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Clock, PhoneCall, Calendar, Video, Phone, Star, MessageSquare, Loader2, CheckCircle2 } from 'lucide-react';
+import { Clock, PhoneCall, Calendar, Video, Phone, Star, MessageSquare, Loader2, CheckCircle2, MessageCircle, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function UserDashboard() {
@@ -23,6 +23,9 @@ export default function UserDashboard() {
     const [reviewHover, setReviewHover] = useState(0);
     const [reviewComment, setReviewComment] = useState('');
     const [submittingReview, setSubmittingReview] = useState(false);
+    const [myChats, setMyChats] = useState([]);
+    const [favorites, setFavorites] = useState([]); // { favDocId, astroId, ...astroData }
+    const [togglingFav, setTogglingFav] = useState(null);
 
     useEffect(() => {
         if (!currentUser) return;
@@ -93,6 +96,53 @@ export default function UserDashboard() {
         }
 
         fetchSessions();
+
+        // Fetch user's chats
+        async function fetchChats() {
+            try {
+                const q = query(
+                    collection(db, 'chats'),
+                    where('userId', '==', currentUser.uid)
+                );
+                const snap = await getDocs(q);
+                const chatList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                chatList.sort((a, b) => {
+                    const aTime = a.lastMessageAt?.toDate?.() || new Date(0);
+                    const bTime = b.lastMessageAt?.toDate?.() || new Date(0);
+                    return bTime - aTime;
+                });
+                setMyChats(chatList);
+            } catch (err) {
+                console.error('Error fetching chats:', err);
+            }
+        }
+        fetchChats();
+
+        // Fetch favorites
+        async function fetchFavorites() {
+            try {
+                const q = query(
+                    collection(db, 'favorites'),
+                    where('userId', '==', currentUser.uid)
+                );
+                const snap = await getDocs(q);
+                const favs = await Promise.all(
+                    snap.docs.map(async (d) => {
+                        const data = d.data();
+                        let astroData = {};
+                        try {
+                            const astroSnap = await getDoc(doc(db, 'astrologers', data.astroId));
+                            if (astroSnap.exists()) astroData = astroSnap.data();
+                        } catch (e) { /* ignore */ }
+                        return { favDocId: d.id, astroId: data.astroId, ...astroData };
+                    })
+                );
+                setFavorites(favs);
+            } catch (err) {
+                console.error('Error fetching favorites:', err);
+            }
+        }
+        fetchFavorites();
     }, [currentUser]);
 
     // Submit a review
@@ -315,8 +365,8 @@ export default function UserDashboard() {
                                                 >
                                                     <Star
                                                         className={`w-7 h-7 transition-colors ${star <= (reviewHover || reviewRating)
-                                                                ? 'fill-yellow-400 text-yellow-400'
-                                                                : 'text-gray-300'
+                                                            ? 'fill-yellow-400 text-yellow-400'
+                                                            : 'text-gray-300'
                                                             }`}
                                                     />
                                                 </button>
@@ -370,6 +420,151 @@ export default function UserDashboard() {
                     ))}
                 </div>
             )}
+
+            {/* My Favorites */}
+            <div className="mt-10">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1 flex items-center gap-2">
+                    <Heart className="w-6 h-6 text-rose-500" />
+                    My Favorites
+                    {favorites.length > 0 && (
+                        <Badge variant="secondary" className="text-xs ml-1">{favorites.length}</Badge>
+                    )}
+                </h2>
+                <p className="text-muted-foreground mb-6 text-sm">Your saved astrologers for quick access.</p>
+                {favorites.length === 0 ? (
+                    <div className="text-center py-10 bg-muted/30 rounded-lg border border-dashed">
+                        <Heart className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-40" />
+                        <h3 className="text-base font-medium text-foreground">No favorites yet</h3>
+                        <p className="text-sm text-muted-foreground mt-1">Browse astrologers and tap the heart to save them here!</p>
+                        <Button asChild variant="outline" className="mt-4">
+                            <Link to="/astrologers">Browse Astrologers</Link>
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {favorites.map(fav => (
+                            <Card key={fav.favDocId} className="group hover:shadow-md transition-all hover:border-rose-200 dark:hover:border-rose-500/30">
+                                <CardContent className="p-4">
+                                    <div className="flex items-start gap-3">
+                                        <Link to={`/astrologer/${fav.astroId}`}>
+                                            <Avatar className="w-12 h-12 border-2 border-primary/20">
+                                                <AvatarFallback className="text-sm">
+                                                    {(fav.name || 'A').substring(0, 2).toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        </Link>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between">
+                                                <Link to={`/astrologer/${fav.astroId}`} className="font-semibold text-sm text-foreground hover:text-primary transition-colors truncate">
+                                                    {fav.name || 'Astrologer'}
+                                                </Link>
+                                                <button
+                                                    onClick={async () => {
+                                                        setTogglingFav(fav.favDocId);
+                                                        try {
+                                                            await deleteDoc(doc(db, 'favorites', fav.favDocId));
+                                                            setFavorites(prev => prev.filter(f => f.favDocId !== fav.favDocId));
+                                                            toast('Removed from favorites');
+                                                        } catch (e) {
+                                                            console.error(e);
+                                                        } finally {
+                                                            setTogglingFav(null);
+                                                        }
+                                                    }}
+                                                    disabled={togglingFav === fav.favDocId}
+                                                    className="text-rose-500 hover:text-rose-600 transition-colors p-1"
+                                                    title="Remove from favorites"
+                                                >
+                                                    <Heart className="w-4 h-4 fill-rose-500" />
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="flex items-center gap-0.5 text-xs text-yellow-700">
+                                                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                                    {fav.rating || 'New'}
+                                                </span>
+                                                <Badge variant={fav.isOnline ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
+                                                    {fav.isOnline ? 'Online' : 'Offline'}
+                                                </Badge>
+                                                <span className="text-xs text-primary font-semibold">${fav.hourlyRate || 30}/hr</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 mt-3">
+                                        <Button asChild size="sm" variant="outline" className="flex-1 text-xs h-8">
+                                            <Link to={`/astrologer/${fav.astroId}`}>View Profile</Link>
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Messages card */}
+            <Card className="mt-8 overflow-hidden hover:shadow-md transition-shadow border-blue-200/50 bg-gradient-to-r from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10 dark:border-blue-500/20">
+                <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/20 border border-blue-200 dark:border-blue-500/30 flex items-center justify-center">
+                                <MessageCircle className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                                    My Messages
+                                    {myChats.length > 0 && (
+                                        <span className="text-sm font-normal text-blue-700 dark:text-blue-400">
+                                            {myChats.length} conversation{myChats.length !== 1 ? 's' : ''}
+                                        </span>
+                                    )}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">Chat with your astrologers</p>
+                            </div>
+                        </div>
+                        <Button asChild variant="outline" className="gap-2 border-blue-300 dark:border-blue-500/30 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10">
+                            <Link to="/chat">
+                                <MessageCircle className="w-4 h-4" />
+                                Open Chat
+                            </Link>
+                        </Button>
+                    </div>
+                    {myChats.length > 0 ? (
+                        <div className="space-y-2">
+                            {myChats.slice(0, 3).map(chat => (
+                                <Link
+                                    key={chat.id}
+                                    to={`/chat?id=${chat.id}`}
+                                    className="flex items-center gap-3 p-3 rounded-lg bg-background/60 hover:bg-background border border-transparent hover:border-border transition-all"
+                                >
+                                    <Avatar className="w-8 h-8 border shrink-0">
+                                        <AvatarFallback className="text-xs">
+                                            {(chat.astroName || 'A').charAt(0).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-foreground truncate">
+                                            {chat.astroName || 'Astrologer'}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground truncate">
+                                            {chat.lastMessage || 'No messages yet'}
+                                        </p>
+                                    </div>
+                                    <span className="text-[10px] text-muted-foreground shrink-0">
+                                        {chat.lastMessageAt?.toDate
+                                            ? new Date(chat.lastMessageAt.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                                            : ''}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted-foreground text-center py-3 bg-muted/20 rounded-lg border border-dashed">
+                            No conversations yet. Message an astrologer from their profile!
+                        </p>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }
