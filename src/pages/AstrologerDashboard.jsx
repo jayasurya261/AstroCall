@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Clock, PhoneCall, Calendar, Video, Phone, Check, X, Power, DollarSign, Camera, Star, MessageSquare, MessageCircle, Globe, Sparkles } from 'lucide-react';
+// Icons removed for clean text-only UI
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
@@ -34,6 +34,7 @@ export default function AstrologerDashboard() {
     const [savingLangs, setSavingLangs] = useState(false);
     const [astroSpecializations, setAstroSpecializations] = useState([]);
     const [savingSpecs, setSavingSpecs] = useState(false);
+    const [activeTab, setActiveTab] = useState('pending'); // 'pending', 'accepted', 'rejected'
 
     // Fetch online status from astrologers collection
     async function fetchOnlineStatus() {
@@ -42,13 +43,22 @@ export default function AstrologerDashboard() {
             const astroRef = doc(db, 'astrologers', currentUser.uid);
             const astroSnap = await getDoc(astroRef);
             if (astroSnap.exists()) {
-                setIsOnline(astroSnap.data().isOnline || false);
-                const rate = astroSnap.data().hourlyRate || 30;
+                const data = astroSnap.data();
+
+                let fetchedPhotoURL = data.photoURL || '';
+                // Auto-sync Google Profile Image (Gmail image) if missing in DB
+                if (!fetchedPhotoURL && currentUser.photoURL) {
+                    fetchedPhotoURL = currentUser.photoURL;
+                    await updateDoc(astroRef, { photoURL: fetchedPhotoURL });
+                }
+
+                setIsOnline(data.isOnline || false);
+                const rate = data.hourlyRate || 30;
                 setHourlyRate(rate);
                 setRateInput(String(rate));
-                setPhotoURL(astroSnap.data().photoURL || '');
-                setAstroLanguages(astroSnap.data().languages || []);
-                setAstroSpecializations(astroSnap.data().specializations || []);
+                setPhotoURL(fetchedPhotoURL);
+                setAstroLanguages(data.languages || []);
+                setAstroSpecializations(data.specializations || []);
             }
         } catch (err) {
             console.error("Error fetching online status:", err);
@@ -213,17 +223,11 @@ export default function AstrologerDashboard() {
         try {
             await updateDoc(doc(db, 'sessions', sessionId), { status: 'active' });
 
-            const session = sessions.find(s => s.id === sessionId);
-
-            toast('Session accepted! Joining call...', {
+            toast('Session accepted! Click "Join Call" when you are ready.', {
                 style: { background: '#dcfce7', color: '#166534', border: '1px solid #86efac' },
             });
 
-            if (session?.roomName) {
-                navigate(`/call-room?room=${session.roomName}&type=${session.callType}`);
-            } else {
-                await fetchSessions();
-            }
+            await fetchSessions();
         } catch (err) {
             console.error("Error accepting session:", err);
             toast('Failed to accept session', {
@@ -251,14 +255,7 @@ export default function AstrologerDashboard() {
     }
 
     const getStatusColor = (status) => {
-        switch (status) {
-            case 'active': return 'bg-green-100 text-green-800 border-green-200';
-            case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'completed': return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
-            case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-            default: return 'bg-gray-100 text-gray-800 border-gray-200';
-        }
+        return 'bg-muted text-foreground border-border';
     };
 
     const pendingCount = sessions.filter(s => s.status === 'pending').length;
@@ -296,7 +293,7 @@ export default function AstrologerDashboard() {
                             {uploadingPhoto ? (
                                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                             ) : (
-                                <Camera className="w-5 h-5 text-white" />
+                                <span className="text-white text-xs font-bold">Edit</span>
                             )}
                         </div>
                         <input
@@ -358,7 +355,7 @@ export default function AstrologerDashboard() {
                 <div className="flex items-center gap-3 flex-wrap">
                     {/* Rate Editor */}
                     <div className="flex items-center gap-1.5 border rounded-lg px-3 py-1.5 bg-background">
-                        <DollarSign className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-bold text-muted-foreground">$</span>
                         <Input
                             type="number"
                             min="0"
@@ -383,23 +380,20 @@ export default function AstrologerDashboard() {
                         onClick={toggleOnlineStatus}
                         disabled={togglingStatus}
                         variant={isOnline ? "default" : "outline"}
-                        className={`gap-2 min-w-[140px] transition-all ${isOnline
-                            ? 'bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-200'
-                            : 'border-gray-300 text-gray-600 hover:bg-gray-100'
+                        className={`gap-2 min-w-[140px] transition-all font-bold ${isOnline
+                            ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                            : 'border-border text-foreground hover:bg-muted'
                             }`}
                     >
-                        <Power className="w-4 h-4" />
                         {togglingStatus ? '...' : isOnline ? t('astrologers.online') : t('astrologers.offline')}
                     </Button>
-                    <span className={`w-3 h-3 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></span>
                 </div>
             </div>
 
             {/* Language Selector */}
             <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
-                    <Globe className="w-5 h-5 text-primary" />
-                    <h3 className="text-sm font-semibold text-foreground">Languages You Speak</h3>
+                    <h3 className="text-sm font-bold text-foreground">Languages You Speak</h3>
                     {savingLangs && <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>}
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -427,7 +421,7 @@ export default function AstrologerDashboard() {
                                     : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
                                     }`}
                             >
-                                {isSelected && <Check className="w-3 h-3 inline mr-1" />}
+                                {isSelected && <span className="inline mr-1">✓</span>}
                                 {lang}
                             </button>
                         );
@@ -438,8 +432,7 @@ export default function AstrologerDashboard() {
             {/* Specializations Selector */}
             <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    <h3 className="text-sm font-semibold text-foreground">Your Specializations</h3>
+                    <h3 className="text-sm font-bold text-foreground">Your Specializations</h3>
                     {savingSpecs && <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>}
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -467,7 +460,7 @@ export default function AstrologerDashboard() {
                                     : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
                                     }`}
                             >
-                                {isSelected && <Check className="w-3 h-3 inline mr-1" />}
+                                {isSelected && <span className="inline mr-1">✓</span>}
                                 {spec}
                             </button>
                         );
@@ -477,42 +470,41 @@ export default function AstrologerDashboard() {
 
             {/* Stats cards */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
-                <Card className="bg-yellow-50 border-yellow-200">
+                <Card className="border-border">
                     <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-yellow-700">{pendingCount}</p>
-                        <p className="text-xs text-yellow-600 font-medium">{t('dashboard.pendingCalls')}</p>
+                        <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
+                        <p className="text-xs text-muted-foreground font-medium">{t('dashboard.pendingCalls')}</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-green-50 border-green-200">
+                <Card className="border-border">
                     <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-green-700">{activeCount}</p>
-                        <p className="text-xs text-green-600 font-medium">{t('dashboard.activeCalls')}</p>
+                        <p className="text-2xl font-bold text-foreground">{activeCount}</p>
+                        <p className="text-xs text-muted-foreground font-medium">{t('dashboard.activeCalls')}</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-blue-50 border-blue-200">
+                <Card className="border-border">
                     <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-blue-700">{todaysCalls}</p>
-                        <p className="text-xs text-blue-600 font-medium">{t('dashboard.todaySessions')}</p>
+                        <p className="text-2xl font-bold text-foreground">{todaysCalls}</p>
+                        <p className="text-xs text-muted-foreground font-medium">{t('dashboard.todaySessions')}</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-muted/50">
+                <Card className="border-border">
                     <CardContent className="p-4 text-center">
                         <p className="text-2xl font-bold text-foreground">{sessions.length}</p>
                         <p className="text-xs text-muted-foreground font-medium">{t('profile.sessions')}</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-yellow-50 border-yellow-200">
+                <Card className="border-border">
                     <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-yellow-700 flex items-center justify-center gap-1">
-                            <Star className="w-5 h-5 fill-yellow-500 text-yellow-500" />
+                        <p className="text-2xl font-bold text-foreground">
                             {avgRating || '—'}
                         </p>
-                        <p className="text-xs text-yellow-600 font-medium">{myReviews.length} {t('profile.reviews')}</p>
+                        <p className="text-xs text-muted-foreground font-medium">{myReviews.length} {t('profile.reviews')}</p>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Sessions list */}
+            {/* Sessions - Tabs Layout */}
             {loading ? (
                 <div className="space-y-4">
                     {[1, 2, 3].map(i => (
@@ -523,114 +515,221 @@ export default function AstrologerDashboard() {
                 </div>
             ) : sessions.length === 0 ? (
                 <div className="text-center py-20 bg-muted/30 rounded-lg border border-dashed">
-                    <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
                     <h3 className="text-lg font-medium text-foreground">{t('dashboard.noSessions')}</h3>
                     <p className="text-muted-foreground mt-1">
                         {isOnline ? t('dashboard.todaySessions') : t('dashboard.goOnline')}
                     </p>
                 </div>
             ) : (
-                <div className="grid gap-4">
-                    {sessions.map(session => (
-                        <Card key={session.id} className={`overflow-hidden ${session.status === 'pending' ? 'border-yellow-300 shadow-sm shadow-yellow-100' : ''}`}>
-                            <CardContent className="p-0 sm:flex items-center">
-                                <div className="p-6 flex-1">
-                                    <div className="flex items-center justify-between mb-4 sm:mb-2 flex-wrap gap-2">
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className={getStatusColor(session.status)}>
-                                                {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-                                            </Badge>
-                                            <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-                                                {session.callType === 'video' ? (
-                                                    <><Video className="w-3 h-3" /> {t('astrologers.videoCall')}</>
-                                                ) : (
-                                                    <><Phone className="w-3 h-3" /> {t('astrologers.voiceCall')}</>
-                                                )}
-                                            </Badge>
-                                        </div>
-                                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                            <Clock className="w-4 h-4" />
-                                            {session.startedAt ? new Date(session.startedAt.toDate()).toLocaleDateString() : 'Pending'}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-4 mt-4">
-                                        <Avatar className="w-12 h-12 border">
-                                            <AvatarFallback>{session.userEmail.charAt(0).toUpperCase()}</AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <p className="font-medium text-foreground">{session.userEmail}</p>
-                                            <p className="text-sm text-muted-foreground">Session: {session.id.substring(0, 8)}...</p>
-                                        </div>
-                                    </div>
-                                </div>
+                <div className="space-y-6">
+                    {/* Tabs Navigation */}
+                    <div className="flex items-center gap-2 border-b border-border pb-4 overflow-x-auto">
+                        <Button
+                            variant={activeTab === 'pending' ? 'default' : 'ghost'}
+                            onClick={() => setActiveTab('pending')}
+                            className="font-bold relative"
+                        >
+                            Pending
+                            <Badge variant="secondary" className="ml-2 text-xs">
+                                {sessions.filter(s => s.status === 'pending').length}
+                            </Badge>
+                        </Button>
+                        <Button
+                            variant={activeTab === 'accepted' ? 'default' : 'ghost'}
+                            onClick={() => setActiveTab('accepted')}
+                            className="font-bold relative"
+                        >
+                            Accepted
+                            <Badge variant="secondary" className="ml-2 text-xs">
+                                {sessions.filter(s => s.status === 'active' || s.status === 'completed').length}
+                            </Badge>
+                        </Button>
+                        <Button
+                            variant={activeTab === 'rejected' ? 'default' : 'ghost'}
+                            onClick={() => setActiveTab('rejected')}
+                            className="font-bold relative"
+                        >
+                            Rejected
+                            <Badge variant="secondary" className="ml-2 text-xs">
+                                {sessions.filter(s => s.status === 'rejected' || s.status === 'cancelled').length}
+                            </Badge>
+                        </Button>
+                    </div>
 
-                                {/* PENDING → Show Accept / Reject */}
-                                {session.status === 'pending' && (
-                                    <div className="bg-yellow-50/50 p-6 sm:border-l flex flex-col items-center justify-center gap-3">
-                                        <Button
-                                            onClick={() => handleAccept(session.id)}
-                                            disabled={!!actionLoading}
-                                            className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
-                                        >
-                                            <Check className="w-4 h-4" />
-                                            {actionLoading === session.id + '-accept' ? '...' : t('dashboard.accept')}
-                                        </Button>
-                                        <Button
-                                            onClick={() => handleReject(session.id)}
-                                            disabled={!!actionLoading}
-                                            variant="outline"
-                                            className="w-full gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
-                                        >
-                                            <X className="w-4 h-4" />
-                                            {actionLoading === session.id + '-reject' ? '...' : t('dashboard.reject')}
-                                        </Button>
+                    {/* Tab Content */}
+                    <div className="mt-4">
+                        {/* === PENDING === */}
+                        {activeTab === 'pending' && (
+                            <div>
+                                <h2 className="text-xl font-bold text-foreground mb-1">Pending</h2>
+                                <p className="text-sm text-muted-foreground mb-4">Sessions waiting for your response</p>
+                                {sessions.filter(s => s.status === 'pending').length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-6 bg-muted/20 rounded-lg border border-dashed">No pending sessions</p>
+                                ) : (
+                                    <div className="grid gap-4">
+                                        {sessions.filter(s => s.status === 'pending').map(session => (
+                                            <Card key={session.id} className="overflow-hidden border-border shadow-sm">
+                                                <CardContent className="p-0 sm:flex items-center">
+                                                    <div className="p-6 flex-1">
+                                                        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                                                            <Badge variant="secondary" className="text-xs">
+                                                                {session.callType === 'video' ? t('astrologers.videoCall') : t('astrologers.voiceCall')}
+                                                            </Badge>
+                                                            <span className="text-sm text-muted-foreground">
+                                                                {session.startedAt ? new Date(session.startedAt.toDate()).toLocaleDateString() : 'Just now'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-4 mt-4">
+                                                            <Avatar className="w-12 h-12 border">
+                                                                <AvatarFallback>{session.userEmail.charAt(0).toUpperCase()}</AvatarFallback>
+                                                            </Avatar>
+                                                            <div>
+                                                                <p className="font-medium text-foreground">{session.userEmail}</p>
+                                                                <p className="text-sm text-muted-foreground">Session: {session.id.substring(0, 8)}...</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-muted/30 p-6 sm:border-l flex flex-col items-center justify-center gap-3">
+                                                        <Button
+                                                            onClick={() => handleAccept(session.id)}
+                                                            disabled={!!actionLoading}
+                                                            className="w-full font-bold bg-primary hover:bg-primary/90 text-primary-foreground"
+                                                        >
+                                                            {actionLoading === session.id + '-accept' ? '...' : t('dashboard.accept')}
+                                                        </Button>
+                                                        <Button
+                                                            onClick={() => handleReject(session.id)}
+                                                            disabled={!!actionLoading}
+                                                            variant="outline"
+                                                            className="w-full font-bold border-border text-foreground hover:bg-muted"
+                                                        >
+                                                            {actionLoading === session.id + '-reject' ? '...' : t('dashboard.reject')}
+                                                        </Button>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
                                     </div>
                                 )}
+                            </div>
+                        )}
 
-                                {/* ACTIVE → Show Join Call */}
-                                {session.status === 'active' && (
-                                    <div className="bg-primary/5 p-6 sm:border-l flex items-center justify-center">
-                                        <Button
-                                            onClick={() => navigate(`/call-room?room=${session.roomName}&type=${session.callType}`)}
-                                            className="gap-2"
-                                        >
-                                            {session.callType === 'video' ? (
-                                                <><Video className="w-4 h-4" /> {t('dashboard.joinCall')}</>
-                                            ) : (
-                                                <><PhoneCall className="w-4 h-4" /> {t('dashboard.joinCall')}</>
-                                            )}
-                                        </Button>
+                        {/* === ACCEPTED === */}
+                        {activeTab === 'accepted' && (
+                            <div>
+                                <h2 className="text-xl font-bold text-foreground mb-1">Accepted</h2>
+                                <p className="text-sm text-muted-foreground mb-4">Active and completed sessions</p>
+                                {sessions.filter(s => s.status === 'active' || s.status === 'completed').length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-6 bg-muted/20 rounded-lg border border-dashed">No accepted sessions</p>
+                                ) : (
+                                    <div className="grid gap-4">
+                                        {sessions.filter(s => s.status === 'active' || s.status === 'completed').map(session => (
+                                            <Card key={session.id} className="overflow-hidden border-border">
+                                                <CardContent className="p-0 sm:flex items-center">
+                                                    <div className="p-6 flex-1">
+                                                        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <Badge variant="outline" className={getStatusColor(session.status)}>
+                                                                    {session.status === 'active' ? 'Active' : 'Completed'}
+                                                                </Badge>
+                                                                <Badge variant="secondary" className="text-xs">
+                                                                    {session.callType === 'video' ? t('astrologers.videoCall') : t('astrologers.voiceCall')}
+                                                                </Badge>
+                                                            </div>
+                                                            <span className="text-sm text-muted-foreground">
+                                                                {session.startedAt ? new Date(session.startedAt.toDate()).toLocaleDateString() : '—'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-4 mt-4">
+                                                            <Avatar className="w-12 h-12 border">
+                                                                <AvatarFallback>{session.userEmail.charAt(0).toUpperCase()}</AvatarFallback>
+                                                            </Avatar>
+                                                            <div>
+                                                                <p className="font-medium text-foreground">{session.userEmail}</p>
+                                                                <p className="text-sm text-muted-foreground">Session: {session.id.substring(0, 8)}...</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {session.status === 'active' && (
+                                                        <div className="bg-muted/30 p-6 sm:border-l flex items-center justify-center">
+                                                            <Button
+                                                                onClick={() => navigate(`/call-room?room=${session.roomName}&type=${session.callType}`)}
+                                                                className="font-bold bg-primary hover:bg-primary/90 text-primary-foreground"
+                                                            >
+                                                                {t('dashboard.joinCall')}
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </CardContent>
+                                            </Card>
+                                        ))}
                                     </div>
                                 )}
-                            </CardContent>
-                        </Card>
-                    ))}
+                            </div>
+                        )}
+
+                        {/* === REJECTED === */}
+                        {activeTab === 'rejected' && (
+                            <div>
+                                <h2 className="text-xl font-bold text-foreground mb-1">Rejected</h2>
+                                <p className="text-sm text-muted-foreground mb-4">Sessions you declined</p>
+                                {sessions.filter(s => s.status === 'rejected' || s.status === 'cancelled').length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-6 bg-muted/20 rounded-lg border border-dashed">No rejected sessions</p>
+                                ) : (
+                                    <div className="grid gap-4">
+                                        {sessions.filter(s => s.status === 'rejected' || s.status === 'cancelled').map(session => (
+                                            <Card key={session.id} className="overflow-hidden border-border opacity-75">
+                                                <CardContent className="p-6">
+                                                    <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge variant="outline" className={getStatusColor(session.status)}>
+                                                                {session.status === 'rejected' ? 'Rejected' : 'Cancelled'}
+                                                            </Badge>
+                                                            <Badge variant="secondary" className="text-xs">
+                                                                {session.callType === 'video' ? t('astrologers.videoCall') : t('astrologers.voiceCall')}
+                                                            </Badge>
+                                                        </div>
+                                                        <span className="text-sm text-muted-foreground">
+                                                            {session.startedAt ? new Date(session.startedAt.toDate()).toLocaleDateString() : '—'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-4 mt-4">
+                                                        <Avatar className="w-12 h-12 border">
+                                                            <AvatarFallback>{session.userEmail.charAt(0).toUpperCase()}</AvatarFallback>
+                                                        </Avatar>
+                                                        <div>
+                                                            <p className="font-medium text-foreground">{session.userEmail}</p>
+                                                            <p className="text-sm text-muted-foreground">Session: {session.id.substring(0, 8)}...</p>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 
             {/* My Reviews - Link to dedicated page */}
-            <Card className="mt-8 overflow-hidden hover:shadow-md transition-shadow border-yellow-200/50 bg-gradient-to-r from-yellow-50/50 to-orange-50/30">
+            <Card className="mt-8 overflow-hidden hover:shadow-md transition-shadow border-border">
                 <CardContent className="p-6">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-yellow-100 border border-yellow-200 flex items-center justify-center">
-                                <Star className="w-6 h-6 fill-yellow-500 text-yellow-500" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-foreground flex items-center gap-2">
-                                    My Reviews
-                                    {myReviews.length > 0 && (
-                                        <span className="text-sm font-normal text-yellow-700">
-                                            {avgRating} ★ · {myReviews.length} {t('profile.reviews')}
-                                        </span>
-                                    )}
-                                </h3>
-                                <p className="text-sm text-muted-foreground">View all feedback from your clients</p>
-                            </div>
+                        <div>
+                            <h3 className="font-bold text-foreground flex items-center gap-2">
+                                My Reviews
+                                {myReviews.length > 0 && (
+                                    <span className="text-sm font-normal text-muted-foreground">
+                                        {avgRating}/5 · {myReviews.length} {t('profile.reviews')}
+                                    </span>
+                                )}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">View all feedback from your clients</p>
                         </div>
-                        <Button asChild variant="outline" className="gap-2 border-yellow-300 text-yellow-700 hover:bg-yellow-50">
+                        <Button asChild variant="outline" className="font-bold border-border text-foreground hover:bg-muted">
                             <Link to="/astrologer-reviews">
-                                <MessageSquare className="w-4 h-4" />
                                 View All
                             </Link>
                         </Button>
@@ -641,7 +740,6 @@ export default function AstrologerDashboard() {
             {/* Messages - All client conversations */}
             <div className="mt-10">
                 <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1 flex items-center gap-2">
-                    <MessageCircle className="w-6 h-6 text-blue-600" />
                     {t('dashboard.clientMessages')}
                     {myChats.length > 0 && (
                         <Badge variant="secondary" className="text-xs ml-2">
@@ -653,7 +751,7 @@ export default function AstrologerDashboard() {
 
                 {myChats.length === 0 ? (
                     <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                        <MessageCircle className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-40" />
+
                         <h3 className="text-base font-medium text-foreground">{t('dashboard.noMessages')}</h3>
                         <p className="text-sm text-muted-foreground mt-1">{t('dashboard.messagesWillAppear')}</p>
                     </div>
@@ -663,16 +761,16 @@ export default function AstrologerDashboard() {
                             <Link
                                 key={chat.id}
                                 to={`/chat?id=${chat.id}`}
-                                className="flex items-center gap-4 p-4 rounded-xl bg-background border hover:border-blue-300 dark:hover:border-blue-500/40 hover:shadow-sm transition-all group"
+                                className="flex items-center gap-4 p-4 rounded-xl bg-background border hover:border-border hover:shadow-sm transition-all group"
                             >
                                 <Avatar className="w-10 h-10 border shrink-0">
-                                    <AvatarFallback className="text-sm bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400">
+                                    <AvatarFallback className="text-sm bg-muted text-foreground">
                                         {(chat.userName || chat.userEmail || 'U').charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
-                                        <p className="font-medium text-sm text-foreground group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors truncate">
+                                        <p className="font-medium text-sm text-foreground transition-colors truncate">
                                             {chat.userName || chat.userEmail?.split('@')[0] || 'User'}
                                         </p>
                                         <span className="text-[11px] text-muted-foreground shrink-0 ml-3">

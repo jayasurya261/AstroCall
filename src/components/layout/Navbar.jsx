@@ -121,6 +121,7 @@ const Navbar = () => {
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="relative w-8 h-8 rounded-full">
                                     <Avatar className="w-8 h-8">
+                                        <AvatarImage src={currentUser?.photoURL} alt={currentUser?.email} />
                                         <AvatarFallback>{currentUser.email[0].toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                 </Button>
@@ -171,7 +172,6 @@ const Navbar = () => {
                                 <DropdownMenuItem asChild>
                                     <Link to="/profile">{t('nav.profile')}</Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>{t('nav.settings')}</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
                                     {t('nav.logout')}

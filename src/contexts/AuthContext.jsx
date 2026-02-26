@@ -94,6 +94,7 @@ export function AuthProvider({ children }) {
         if (role === "astrologer") {
             await setDoc(doc(db, "astrologers", user.uid), {
                 name: user.displayName || user.email.split("@")[0],
+                photoURL: user.photoURL || "",
                 bio: "New astrologer on AstroCall.",
                 languages: ["English"],
                 isOnline: false,

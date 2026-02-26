@@ -151,59 +151,63 @@ export default function UserProfile() {
                                         displayName || currentUser.email?.split('@')[0]
                                     )}
                                 </h1>
-                                {!editing && <CheckCircle2 className="w-5 h-5 text-primary fill-primary/20" />}
+                                {/* Verified badge */}
                             </div>
-                            <span>Email: {currentUser.email}</span>
+                            <div className="mt-1.5 text-sm text-muted-foreground">
+                                <span>Email: {currentUser.email}</span>
+                            </div>
                         </div>
-                    </div>
-                    <Button variant="outline" size="sm" className="font-bold border-border bg-background text-foreground hover:bg-muted" onClick={() => setEditing(true)}>
-                        {t('profile.editProfile')}
-                    </Button>
-                    <div className="flex gap-2">
-                        <Button size="sm" className="font-bold bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSave} disabled={saving}>
-                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                            {t('profile.save')}
-                        </Button>
-                        <Button variant="outline" size="sm" className="font-bold border-border bg-background text-foreground hover:bg-muted" onClick={() => {
-                            setEditing(false);
-                            setDisplayName(profile?.displayName || currentUser.email.split('@')[0]);
-                            setPhoneNumber(profile?.phoneNumber || '');
-                            setBio(profile?.bio || '');
-                        }}>
-                            Cancel
-                        </Button>
-                    </div>
-                        )}
-                </div>
 
-                {/* Info rows */}
-                <div className="mt-5 space-y-3">
-                    <div className="flex items-center gap-3 text-sm">
-                        <span className="text-muted-foreground">{t('profile.role')}:</span>
-                        <Badge variant="secondary" className="capitalize">{userRole}</Badge>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm">
-                        <span className="text-muted-foreground">{t('profile.memberSince')}:</span>
-                        <span className="text-foreground font-medium">{memberSince}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm">
-                        <span className="text-muted-foreground">{t('profile.phone')}:</span>
-                        {editing ? (
-                            <Input
-                                value={phoneNumber}
-                                onChange={e => setPhoneNumber(e.target.value)}
-                                placeholder="Your phone number"
-                                className="h-8 w-52"
-                            />
+                        {!editing ? (
+                            <Button variant="outline" size="sm" className="font-bold border-border bg-background text-foreground hover:bg-muted" onClick={() => setEditing(true)}>
+                                {t('profile.editProfile')}
+                            </Button>
                         ) : (
-                            <span className="text-foreground font-medium">
-                                {profile?.phoneNumber || t('profile.notSet')}
-                            </span>
+                            <div className="flex gap-2">
+                                <Button size="sm" className="font-bold bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSave} disabled={saving}>
+                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                    {t('profile.save')}
+                                </Button>
+                                <Button variant="outline" size="sm" className="font-bold border-border bg-background text-foreground hover:bg-muted" onClick={() => {
+                                    setEditing(false);
+                                    setDisplayName(profile?.displayName || currentUser.email.split('@')[0]);
+                                    setPhoneNumber(profile?.phoneNumber || '');
+                                    setBio(profile?.bio || '');
+                                }}>
+                                    Cancel
+                                </Button>
+                            </div>
                         )}
                     </div>
-                    <div className="flex items-start gap-3 text-sm">
-                        <span className="text-muted-foreground shrink-0">{t('profile.bio')}:</span>
-                        {editing ? (
+
+                    {/* Info rows */}
+                    <div className="mt-5 space-y-3">
+                        <div className="flex items-center gap-3 text-sm">
+                            <span className="text-muted-foreground">{t('profile.role')}:</span>
+                            <Badge variant="secondary" className="capitalize">{userRole}</Badge>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm">
+                            <span className="text-muted-foreground">{t('profile.memberSince')}:</span>
+                            <span className="text-foreground font-medium">{memberSince}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm">
+                            <span className="text-muted-foreground">{t('profile.phone')}:</span>
+                            {editing ? (
+                                <Input
+                                    value={phoneNumber}
+                                    onChange={e => setPhoneNumber(e.target.value)}
+                                    placeholder="Your phone number"
+                                    className="h-8 w-52"
+                                />
+                            ) : (
+                                <span className="text-foreground font-medium">
+                                    {profile?.phoneNumber || t('profile.notSet')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-start gap-3 text-sm">
+                            <span className="text-muted-foreground shrink-0">{t('profile.bio')}:</span>
+                            {editing ? (
                                 <textarea
                                     value={bio}
                                     onChange={e => setBio(e.target.value)}
@@ -211,77 +215,78 @@ export default function UserProfile() {
                                     className="flex-1 min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
                                     maxLength={300}
                                 />
+                            ) : (
                                 <span className="text-foreground leading-relaxed whitespace-pre-wrap">
                                     {profile?.bio || t('profile.noBio')}
                                 </span>
-                        )}
+                            )}
+                        </div>
                     </div>
-                </div>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
 
-            {/* Stats */ }
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-        <Card className="hover:shadow-sm transition-shadow border-border">
-            <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-foreground">{stats.sessions}</p>
-                <p className="text-xs text-muted-foreground">{t('profile.sessions')}</p>
-            </CardContent>
-        </Card>
-        <Card className="hover:shadow-sm transition-shadow border-border">
-            <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-foreground">{stats.reviews}</p>
-                <p className="text-xs text-muted-foreground">{t('profile.reviews')}</p>
-            </CardContent>
-        </Card>
-        <Card className="hover:shadow-sm transition-shadow border-border">
-            <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-foreground">{stats.favorites}</p>
-                <p className="text-xs text-muted-foreground">{t('profile.favorites')}</p>
-            </CardContent>
-        </Card>
-        <Card className="hover:shadow-sm transition-shadow border-border">
-            <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-foreground">{stats.chats}</p>
-                <p className="text-xs text-muted-foreground">{t('profile.conversations')}</p>
-            </CardContent>
-        </Card>
-    </div>
-
-    {/* Quick Links */ }
-    <Card className="mt-6">
-        <CardContent className="p-5">
-            <h3 className="font-semibold text-foreground mb-3">{t('profile.quickLinks')}</h3>
-            <div className="flex flex-wrap gap-2">
-                {userRole === 'user' && (
-                    <>
-                        <Button asChild variant="outline" size="sm">
-                            <Link to="/user-dashboard">{t('nav.mySessions')}</Link>
-                        </Button>
-                        <Button asChild variant="outline" size="sm">
-                            <Link to="/favorites">{t('nav.myFavorites')}</Link>
-                        </Button>
-                    </>
-                )}
-                {userRole === 'astrologer' && (
-                    <>
-                        <Button asChild variant="outline" size="sm">
-                            <Link to="/astrologer-dashboard">{t('nav.dashboard')}</Link>
-                        </Button>
-                        <Button asChild variant="outline" size="sm">
-                            <Link to="/astrologer-reviews">{t('nav.myReviews')}</Link>
-                        </Button>
-                    </>
-                )}
-                <Button asChild variant="outline" size="sm">
-                    <Link to="/chat">{t('nav.messages')}</Link>
-                </Button>
-                <Button asChild variant="outline" size="sm">
-                    <Link to="/astrologers">{t('nav.astrologers')}</Link>
-                </Button>
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                <Card className="hover:shadow-sm transition-shadow border-border">
+                    <CardContent className="p-4 text-center">
+                        <p className="text-2xl font-bold text-foreground">{stats.sessions}</p>
+                        <p className="text-xs text-muted-foreground">{t('profile.sessions')}</p>
+                    </CardContent>
+                </Card>
+                <Card className="hover:shadow-sm transition-shadow border-border">
+                    <CardContent className="p-4 text-center">
+                        <p className="text-2xl font-bold text-foreground">{stats.reviews}</p>
+                        <p className="text-xs text-muted-foreground">{t('profile.reviews')}</p>
+                    </CardContent>
+                </Card>
+                <Card className="hover:shadow-sm transition-shadow border-border">
+                    <CardContent className="p-4 text-center">
+                        <p className="text-2xl font-bold text-foreground">{stats.favorites}</p>
+                        <p className="text-xs text-muted-foreground">{t('profile.favorites')}</p>
+                    </CardContent>
+                </Card>
+                <Card className="hover:shadow-sm transition-shadow border-border">
+                    <CardContent className="p-4 text-center">
+                        <p className="text-2xl font-bold text-foreground">{stats.chats}</p>
+                        <p className="text-xs text-muted-foreground">{t('profile.conversations')}</p>
+                    </CardContent>
+                </Card>
             </div>
-        </CardContent>
-    </Card>
+
+            {/* Quick Links */}
+            <Card className="mt-6">
+                <CardContent className="p-5">
+                    <h3 className="font-semibold text-foreground mb-3">{t('profile.quickLinks')}</h3>
+                    <div className="flex flex-wrap gap-2">
+                        {userRole === 'user' && (
+                            <>
+                                <Button asChild variant="outline" size="sm">
+                                    <Link to="/user-dashboard">{t('nav.mySessions')}</Link>
+                                </Button>
+                                <Button asChild variant="outline" size="sm">
+                                    <Link to="/favorites">{t('nav.myFavorites')}</Link>
+                                </Button>
+                            </>
+                        )}
+                        {userRole === 'astrologer' && (
+                            <>
+                                <Button asChild variant="outline" size="sm">
+                                    <Link to="/astrologer-dashboard">{t('nav.dashboard')}</Link>
+                                </Button>
+                                <Button asChild variant="outline" size="sm">
+                                    <Link to="/astrologer-reviews">{t('nav.myReviews')}</Link>
+                                </Button>
+                            </>
+                        )}
+                        <Button asChild variant="outline" size="sm">
+                            <Link to="/chat">{t('nav.messages')}</Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm">
+                            <Link to="/astrologers">{t('nav.astrologers')}</Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
         </div >
     );
 }
