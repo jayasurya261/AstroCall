@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -497,69 +497,35 @@ export default function AstrologerDashboard() {
                 </div>
             )}
 
-            {/* My Reviews Section */}
-            <div className="mt-10">
-                <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1 flex items-center gap-2">
-                    <MessageSquare className="w-6 h-6 text-yellow-600" />
-                    My Reviews
-                </h2>
-                <p className="text-muted-foreground mb-6 text-sm">Feedback from your clients.</p>
-
-                {reviewsLoading ? (
-                    <div className="space-y-3">
-                        {[1, 2].map(i => (
-                            <Card key={i} className="animate-pulse">
-                                <CardContent className="h-20 bg-muted/50"></CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                ) : myReviews.length === 0 ? (
-                    <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                        <Star className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-40" />
-                        <h3 className="text-base font-medium text-foreground">No reviews yet</h3>
-                        <p className="text-sm text-muted-foreground mt-1">Reviews from your clients will appear here.</p>
-                    </div>
-                ) : (
-                    <div className="grid gap-3">
-                        {myReviews.map(review => (
-                            <Card key={review.id} className="overflow-hidden hover:shadow-sm transition-shadow">
-                                <CardContent className="p-5">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="w-9 h-9 border">
-                                                <AvatarFallback className="text-xs">
-                                                    {(review.userEmail || 'U').charAt(0).toUpperCase()}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="font-medium text-sm text-foreground">{review.userEmail}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {review.createdAt?.toDate
-                                                        ? new Date(review.createdAt.toDate()).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-                                                        : 'Recent'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-0.5">
-                                            {[1, 2, 3, 4, 5].map(s => (
-                                                <Star
-                                                    key={s}
-                                                    className={`w-4 h-4 ${s <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                    {review.comment && (
-                                        <p className="mt-3 text-sm text-muted-foreground leading-relaxed pl-12">
-                                            "{review.comment}"
-                                        </p>
+            {/* My Reviews - Link to dedicated page */}
+            <Card className="mt-8 overflow-hidden hover:shadow-md transition-shadow border-yellow-200/50 bg-gradient-to-r from-yellow-50/50 to-orange-50/30">
+                <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-yellow-100 border border-yellow-200 flex items-center justify-center">
+                                <Star className="w-6 h-6 fill-yellow-500 text-yellow-500" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                                    My Reviews
+                                    {myReviews.length > 0 && (
+                                        <span className="text-sm font-normal text-yellow-700">
+                                            {avgRating} ★ · {myReviews.length} reviews
+                                        </span>
                                     )}
-                                </CardContent>
-                            </Card>
-                        ))}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">View all feedback from your clients</p>
+                            </div>
+                        </div>
+                        <Button asChild variant="outline" className="gap-2 border-yellow-300 text-yellow-700 hover:bg-yellow-50">
+                            <Link to="/astrologer-reviews">
+                                <MessageSquare className="w-4 h-4" />
+                                View All
+                            </Link>
+                        </Button>
                     </div>
-                )}
-            </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }

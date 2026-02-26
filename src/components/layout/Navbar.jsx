@@ -12,6 +12,7 @@ import {
     navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -34,12 +35,12 @@ const Navbar = () => {
         <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-16 items-center justify-between px-4 mx-auto">
                 {/* Logo Section */}
-                <div className="flex items-center gap-2">
+                <Link to="/" className="flex items-center gap-2 no-underline">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold">
                         AC
                     </div>
-                    <span className="text-xl font-bold tracking-tight">AstroCall</span>
-                </div>
+                    <span className="text-xl font-bold tracking-tight text-foreground">AstroCall</span>
+                </Link>
 
                 {/* Desktop Navigation — only show when logged in */}
                 {currentUser && (
@@ -47,18 +48,18 @@ const Navbar = () => {
                         <NavigationMenu>
                             <NavigationMenuList>
                                 <NavigationMenuItem>
-                                    <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/">
-                                        Home
+                                    <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                                        <Link to="/">Home</Link>
                                     </NavigationMenuLink>
                                 </NavigationMenuItem>
                                 <NavigationMenuItem>
-                                    <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/astrologers">
-                                        Astrologers
+                                    <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                                        <Link to="/astrologers">Astrologers</Link>
                                     </NavigationMenuLink>
                                 </NavigationMenuItem>
                                 <NavigationMenuItem>
-                                    <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/about">
-                                        About
+                                    <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                                        <Link to="/about">About</Link>
                                     </NavigationMenuLink>
                                 </NavigationMenuItem>
                             </NavigationMenuList>
@@ -67,7 +68,8 @@ const Navbar = () => {
                 )}
 
                 {/* Action Buttons & Profile */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <ThemeToggle />
                     {!currentUser ? (
                         <>
                             <Button asChild variant="outline" className="hidden sm:flex">
@@ -104,9 +106,14 @@ const Navbar = () => {
                                     </DropdownMenuItem>
                                 )}
                                 {userRole === 'astrologer' && (
-                                    <DropdownMenuItem asChild>
-                                        <Link to="/astrologer-dashboard">Dashboard</Link>
-                                    </DropdownMenuItem>
+                                    <>
+                                        <DropdownMenuItem asChild>
+                                            <Link to="/astrologer-dashboard">Dashboard</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link to="/astrologer-reviews">My Reviews</Link>
+                                        </DropdownMenuItem>
+                                    </>
                                 )}
                                 {userRole === 'user' && (
                                     <DropdownMenuItem asChild>

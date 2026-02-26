@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { generateLiveKitToken, getLiveKitUrl } from '@/lib/livekit';
 import { LiveKitRoom, VideoConference, RoomAudioRenderer, ControlBar } from '@livekit/components-react';
 import '@livekit/components-styles';
@@ -8,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, PhoneOff } from 'lucide-react';
 
 export default function CallRoom() {
-    const { currentUser } = useAuth();
+    const { currentUser, userRole } = useAuth();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
@@ -37,8 +39,30 @@ export default function CallRoom() {
         getToken();
     }, [currentUser, roomName, callType]);
 
-    function handleDisconnect() {
-        navigate(-1); // go back to previous page
+    async function handleDisconnect() {
+        // Mark session as completed when someone leaves the call
+        try {
+            const q = query(
+                collection(db, 'sessions'),
+                where('roomName', '==', roomName),
+                where('status', '==', 'active')
+            );
+            const snap = await getDocs(q);
+            for (const sessionDoc of snap.docs) {
+                await updateDoc(doc(db, 'sessions', sessionDoc.id), {
+                    status: 'completed',
+                });
+            }
+        } catch (err) {
+            console.error('Error marking session as completed:', err);
+        }
+
+        // Redirect to the appropriate dashboard
+        if (userRole === 'astrologer') {
+            navigate('/astrologer-dashboard');
+        } else {
+            navigate('/user-dashboard');
+        }
     }
 
     // ─── Loading State ───────────────────────────────────────────────
